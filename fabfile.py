@@ -72,7 +72,7 @@ def nodejs_install():
             if not exists('node'):
                 sudo('git clone https://github.com/joyent/node.git')
             with cd('node'):
-                sudo('git checkout v0.6.18') #Try checking nodejs.org for what the stable version is
+                sudo('git checkout v0.8.18') #Try checking nodejs.org for what the stable version is
                 sudo('./configure')
                 sudo('make')
                 sudo('make install')
@@ -233,7 +233,7 @@ def install_devtools():
     run('git config --global user.email "adamw@tbcn.ca"')
 
     # python
-    sudo('pip install hyde')
+    sudo('pip install hyde feedparser')
 
 def setup_bash():
     put('configs/bashrc.after', '/home/vagrant/.bashrc.after')
