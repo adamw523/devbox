@@ -78,6 +78,25 @@ def nodejs_install():
                 sudo('make install')
 
 #---------------------------
+# Yeoman
+#---------------------------
+def yeoman_install():
+    nodejs_install()
+    sudo('gem install --no-ri --no-rdoc compass')
+    sudo('apt-get install libjpeg-turbo-progs')
+    sudo('apt-get install optipng')
+
+    if not run('which phantomjs', warn_only=True):
+        if not exists('phantomjs-1.8.1-linux-i686'):
+            run('wget http://phantomjs.googlecode.com/files/phantomjs-1.8.1-linux-i686.tar.bz2')
+            run('tar xjf phantom*')
+            if not exists('/usr/local/bin/phantomjs'):
+                sudo('ln -s /home/vagrant/phantomjs-1.8.1-linux-i686/bin/phantomjs /usr/local/bin/phantomjs')
+
+    sudo('npm install -g yeoman')
+
+
+#---------------------------
 # Gmail Backup
 #---------------------------
 def gmailbackup_install():

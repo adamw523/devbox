@@ -38,13 +38,14 @@ Vagrant::Config.run do |config|
   config.vm.define :devbox do |devbox|
     devbox.vm.box = "quantal32"
     devbox.vm.network :bridged
-    #devbox.vm.box_url = "https://github.com/downloads/roderik/VagrantQuantal64Box/quantal64.box"
+    devbox.vm.box_url = "http://adamw523.s3.amazonaws.com/vagrant/vagrant-quantal32.box"
     devbox.vm.share_folder "data", "/data", "/Users/adam/work_local/devbox"
     devbox.vm.customize ["modifyvm", :id,
                            "--cpus", 4]
     devbox.ssh.forward_x11 = true
     devbox.vm.forward_port 3131, 3131
     devbox.vm.forward_port 8888, 8888
+    devbox.vm.forward_port 8000, 8000
   end
 
 end
