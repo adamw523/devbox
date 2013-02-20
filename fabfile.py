@@ -135,6 +135,7 @@ def ipython_notebook_install():
     run('/home/vagrant/notebookenv/bin/pip install pysqlite')
     run('/home/vagrant/notebookenv/bin/pip install PIL')
     run('/home/vagrant/notebookenv/bin/pip install markdown')
+    run('/home/vagrant/notebookenv/bin/pip install requests')
 
     # install basemap
     basemap = run('/home/vagrant/notebookenv/bin/pip freeze |grep basemap')
@@ -229,7 +230,7 @@ def install_devtools():
     """
     Install development tools
     """
-    sudo('apt-get -y install git build-essential screen tmux libsqlite3-dev')
+    sudo('apt-get -y install git build-essential screen tmux libsqlite3-dev git git-svn subversion swig')
     if not exists('/data_local'):
         sudo('mkdir /data_local')
         sudo('chown -R vagrant:vagrant /data_local')
@@ -252,7 +253,7 @@ def install_devtools():
     run('git config --global user.email "adamw@tbcn.ca"')
 
     # python
-    sudo('pip install hyde feedparser')
+    sudo('pip install hyde feedparser fabric dodo M2Crypto virtualenvwrapper')
 
 def setup_bash():
     put('configs/bashrc.after', '/home/vagrant/.bashrc.after')
