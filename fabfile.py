@@ -1,9 +1,12 @@
+import ConfigParser
 from fabric.api import *
 from fabric.operations import *
 from fabric.colors import green as _green
 from fabric.colors import yellow as _yellow
 from fabric.colors import red as _red
 from fabric.contrib.files import *
+from fabtools import require
+import fabtools
 import os.path
 import sys
 
@@ -18,6 +21,19 @@ def _runbg(cmd, sockname="dtach"):
 #---------------------------
 # Environemnts
 #---------------------------
+
+def dodo():
+	"""
+	Select DigitalOcean environment
+	"""
+
+	# get config file
+	config = ConfigParser.ConfigParser()
+	config.read(['private/dodo.cfg'])
+
+	# set values from config
+	env.hosts = [config.get('dodo', 'host')]
+	env.user = config.get('dodo', 'user')
 
 def vagrant():
     """
@@ -45,7 +61,7 @@ def c9_install():
     print(_green("Cloud9 IDE"))
     install_devtools()
     nodejs_install()
-    sudo('apt-get -y install npm libxml2 libxml2-dev')
+    fabtools.require.deb.packages(['npm', 'libxml2', 'libxml2-dev'])
     sudo('npm install -g sm')
     sudo('npm install qs mime formidable q n-util wrench detective')
     with cd('/data_local'):
@@ -83,8 +99,7 @@ def nodejs_install():
 def yeoman_install():
     nodejs_install()
     sudo('gem install --no-ri --no-rdoc compass')
-    sudo('apt-get install libjpeg-turbo-progs')
-    sudo('apt-get install optipng')
+    fabtools.require.deb.packages(['libjpeg-turbo-progs', 'optipng'])
 
     if not run('which phantomjs', warn_only=True):
         if not exists('phantomjs-1.8.1-linux-i686'):
@@ -112,30 +127,21 @@ def gmailbackup_install():
 # IPython
 #---------------------------
 def ipython_install():
-    sudo('apt-get -y install python-pip python-dev libncurses5 libncurses5-dev')
+    fabtools.require.deb.packages(['python-pip', 'python-dev', 'libncurses5', 'libncurses5-dev'])
     sudo('pip install ipython virtualenv')
 
 def ipython_notebook_install():
-    sudo('apt-get -y install libatlas-base-dev gfortran python-scipy libfreetype6 libfreetype6-dev libpng12-dev')
-    sudo('apt-get -y install python-opencv pandoc')
-    #sudo('apt-get -y install python-mpltoolkits.basemap')
-    #sudo('apt-get -y install python-mpltoolkits.basemap-data')
-    sudo('apt-get -y install libgeos-dev')
+    fabtools.require.deb.packages(['libatlas-base-dev', 'gfortran', 'python-scipy', 
+        'libfreetype6', 'libfreetype6-dev', 'libpng12-dev', 'python-opencv', 'pandoc',
+        'libgeos-dev'])
 
     if not exists('notebookenv'):
         run('virtualenv notebookenv')
 
     # install iPython notebook requirements in our virtualenv
     run('/home/vagrant/notebookenv/bin/pip install ipython tornado readline nose pexpect pyzmq pygments')
-    run('/home/vagrant/notebookenv/bin/pip install numpy')
-    run('/home/vagrant/notebookenv/bin/pip install scipy')
-    run('/home/vagrant/notebookenv/bin/pip install matplotlib')
-    run('/home/vagrant/notebookenv/bin/pip install feedparser')
-    run('/home/vagrant/notebookenv/bin/pip install nose')
-    run('/home/vagrant/notebookenv/bin/pip install pysqlite')
-    run('/home/vagrant/notebookenv/bin/pip install PIL')
-    run('/home/vagrant/notebookenv/bin/pip install markdown')
-    run('/home/vagrant/notebookenv/bin/pip install requests')
+    run('/home/vagrant/notebookenv/bin/pip install numpy scipy matplotlib feedparser nose tdaemon')
+    run('/home/vagrant/notebookenv/bin/pip install pysqlite PIL markdown requests')
 
     # install basemap
     basemap = run('/home/vagrant/notebookenv/bin/pip freeze |grep basemap')
@@ -191,12 +197,13 @@ def rbenv_install():
 #---------------------------
 # VIM
 #---------------------------
-def vim_janus_install():
-    sudo('apt-get install -y rake git curl ctags')
-    run('curl -Lo- https://bit.ly/janus-bootstrap | bash')
-
 def vim_copy_config():
-    put('configs/vimrc.after', '/home/vagrant/.vimrc.after')
+    put('configs/vimrc.after', '/home/%s/.vimrc.after' % env.user)
+
+def vim_janus_install():
+    fabtools.require.deb.packages(['rake', 'git', 'curl', 'ctags', 'vim'])
+    run('curl -Lo- https://bit.ly/janus-bootstrap | bash')
+    vim_copy_config()
 
 #---------------------------
 # AWS
@@ -214,8 +221,10 @@ def aws_copy_MailStore():
 # AeroFS
 #----------------------------
 def aerofs_install():
-    sudo('apt-get install -y openjdk-7-jre openjdk-7-jdk default-jre sharutils dtach')
-    sudo('dpkg -i /vagrant/lib/aerofs-installer.deb')
+    fabtools.require.deb.packages(['openjdk-7-jre', 'openjdk-7-jdk', 'default-jre', 
+        'sharutils', 'dtach'])
+    put('lib/aerofs-installer.deb', '/tmp/')
+    sudo('dpkg -i /tmp/aerofs-installer.deb')
 
 def aerofs_run_once():
     run('aerofs-cli')
@@ -224,18 +233,47 @@ def aerofs_run():
     _runbg('aerofs-cli')
 
 #---------------------------
+# VPN
+#---------------------------
+def vpn_install():
+    # follwing instructions: https://raymii.org/s/tutorials/IPSEC_L2TP_vpn_with_Ubuntu_12.04.html
+    fabtools.require.deb.packages(['openswan', 'xl2tpd', 'ppp', 'lsof'])
+
+    sudo('iptables --table nat --append POSTROUTING --jump MASQUERADE')
+
+    sudo ('echo "net.ipv4.ip_forward = 1" |  tee -a /etc/sysctl.conf')
+    sudo ('echo "net.ipv4.conf.all.accept_redirects = 0" |  tee -a /etc/sysctl.conf')
+    sudo ('echo "net.ipv4.conf.all.send_redirects = 0" |  tee -a /etc/sysctl.conf')
+    sudo ('for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects; echo 0 > $vpn/send_redirects; done')
+    sudo ('sysctl -p')
+
+    append('/etc/rc.local', "for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects;", use_sudo=True)
+    append('/etc/rc.local', "echo 0 > $vpn/send_redirects; done", use_sudo=True)
+    append('/etc/rc.local', "iptables --table nat --append POSTROUTING --jump MASQUERADE", use_sudo=True)
+
+    put('configs/ipsec.conf', '/etc/ipsec.conf', use_sudo=True)
+    put('private/ipsec.secrets', '/etc/ipsec.secrets', use_sudo=True, mode=0600)
+
+    # back up original config
+    if contains('/etc/xl2tpd/xl2tpd.conf', 'Sample l2tpd configuration file'):
+        sudo('cp /etc/xl2tpd/xl2tpd.conf /etc/xl2tpd/xl2tpd.conf.orig')
+
+    put('configs/xl2tpd.conf', '/etc/xl2tpd/xl2tpd.conf', use_sudo=True)
+
+
+
+
+
+#---------------------------
 # System Level
 #---------------------------
 def install_devtools():
     """
     Install development tools
     """
-    sudo('apt-get -y install git build-essential screen tmux libsqlite3-dev git git-svn subversion swig')
-    if not exists('/data_local'):
-        sudo('mkdir /data_local')
-        sudo('chown -R vagrant:vagrant /data_local')
+    fabtools.require.deb.packages(['build-essential', 'screen', 'tmux', 'libsqlite3-dev', 
+        'git', 'git-svn', 'subversion', 'swig', 'libjpeg-turbo8-dev', 'libjpeg8-dev'])
 
-    sudo('apt-get install -y libjpeg-turbo8-dev libjpeg8-dev')
 
     quantal64 = run('uname -a |grep quantal64', warn_only=True)
     if quantal64:
@@ -245,7 +283,8 @@ def install_devtools():
             sudo('if [ ! -L /usr/lib/%s ]; then ln -s /usr/lib/x86_64-linux-gnu/%s /usr/lib; fi' % (lib, lib), warn_only=True)
 
     # SSH config
-    put('private/ssh/id_rsa*', '/home/vagrant/.ssh/', mode=0600)
+    put('private/ssh/id_rsa_devbox', '/home/%s/.ssh/id_rsa' % env.user, mode=0600)
+    put('private/ssh/id_rsa_devbox.pub', '/home/%s/.ssh/id_rsa.pub' % env.user, mode=0600)
     run('chmod 700 ~/.ssh')
 
     # github config
@@ -255,9 +294,11 @@ def install_devtools():
     # python
     sudo('pip install hyde feedparser fabric dodo M2Crypto virtualenvwrapper')
 
+    setup_bash()
+
 def setup_bash():
-    put('configs/bashrc.after', '/home/vagrant/.bashrc.after')
-    append('/home/vagrant/.bashrc', "\n. .bashrc.after")
+    put('configs/bashrc.after', '/home/%s/.bashrc.after' % env.user)
+    append('/home/%s/.bashrc' % env.user, "\n. .bashrc.after")
 
 def update_system(force=True):
     """
