@@ -188,11 +188,22 @@ def ipython_notebook_run():
 #---------------------------
 # Ruby / Rails Env
 #---------------------------
+def ruby_install():
+    fabtools.require.deb.packages(['ruby', 'ruby-dev'])
+    rbenv_install()
+    bundler_install()
+
 def rbenv_install():
-    run('git clone git://github.com/sstephenson/rbenv.git ~/.rbenv')
+    if not exists('~/.rbenv'):
+        run('git clone git://github.com/sstephenson/rbenv.git ~/.rbenv')
+    if not exists('~/.rbenv/plugins/ruby-build'):
+        run('git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build')
+
     append('~/.profile', '\nexport PATH="$HOME/.rbenv/bin:$PATH"');
     append('~/.profile', '\neval "$(rbenv init -)"')
-    run('git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build')
+
+def bundler_install():
+    sudo('gem install bundler')
 
 #---------------------------
 # VIM
@@ -237,15 +248,16 @@ def aerofs_run():
 #---------------------------
 def vpn_install():
     # follwing instructions: https://raymii.org/s/tutorials/IPSEC_L2TP_vpn_with_Ubuntu_12.04.html
+    # fabtools.require.deb.packages(['openswan', 'xl2tpd', 'ppp', 'lsof', 'libgmp3c2', 'linux-generic'])
     fabtools.require.deb.packages(['openswan', 'xl2tpd', 'ppp', 'lsof'])
 
     sudo('iptables --table nat --append POSTROUTING --jump MASQUERADE')
 
-    sudo ('echo "net.ipv4.ip_forward = 1" |  tee -a /etc/sysctl.conf')
-    sudo ('echo "net.ipv4.conf.all.accept_redirects = 0" |  tee -a /etc/sysctl.conf')
-    sudo ('echo "net.ipv4.conf.all.send_redirects = 0" |  tee -a /etc/sysctl.conf')
-    sudo ('for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects; echo 0 > $vpn/send_redirects; done')
-    sudo ('sysctl -p')
+    sudo('echo "net.ipv4.ip_forward = 1" |  tee -a /etc/sysctl.conf')
+    sudo('echo "net.ipv4.conf.all.accept_redirects = 0" |  tee -a /etc/sysctl.conf')
+    sudo('echo "net.ipv4.conf.all.send_redirects = 0" |  tee -a /etc/sysctl.conf')
+    sudo('for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects; echo 0 > $vpn/send_redirects; done')
+    sudo('sysctl -p')
 
     append('/etc/rc.local', "for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects;", use_sudo=True)
     append('/etc/rc.local', "echo 0 > $vpn/send_redirects; done", use_sudo=True)
@@ -260,9 +272,29 @@ def vpn_install():
 
     put('configs/xl2tpd.conf', '/etc/xl2tpd/xl2tpd.conf', use_sudo=True)
 
+    append('/etc/ppp/chap-secrets', '# Secrets for authentication using CHAP', use_sudo=True)
+    append('/etc/ppp/chap-secrets', '# client       server  secret                  IP addresses', use_sudo=True)
+    append('/etc/ppp/chap-secrets', 'deploy         l2tpd   deploy            *', use_sudo=True)
 
+    sudo('service ipsec restart;  service xl2tpd restart')
 
+def openvpn_install():
+    fabtools.require.deb.packages(['openvpn'])
+    if not exists('/etc/openvpn/easy-rsa/'):
+        # sudo('mkdir /etc/openvpn/easy-rsa/')
+        sudo('cp -r /usr/share/doc/openvpn/examples/easy-rsa/2.0 /etc/openvpn/easy-rsa')
+        put('configs/openvpn_vars.sh', '/etc/openvpn/easy-rsa/vars', use_sudo=True)
 
+        with cd('/etc/openvpn/easy-rsa'):
+            sudo('source ./vars; ./clean-all; ./build-dh; ./pkitool --initca; ./pkitool --server server')
+            with cd('keys'):
+                sudo('openvpn --genkey --secret ta.key')
+                sudo('cp server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
+
+def openvpn_create_client_crt():
+    hostname = prompt("Host name?")
+    with cd('/etc/openvpn/easy-rsa/'):
+        sudo('source vars; ./pkitool %s' % hostname)
 
 #---------------------------
 # System Level
