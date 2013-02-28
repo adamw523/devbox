@@ -279,7 +279,7 @@ def vpn_install():
     sudo('service ipsec restart;  service xl2tpd restart')
 
 def openvpn_install():
-    fabtools.require.deb.packages(['openvpn'])
+    fabtools.require.deb.packages(['openvpn', 'openvswitch-brcompat'])
     if not exists('/etc/openvpn/easy-rsa/'):
         # sudo('mkdir /etc/openvpn/easy-rsa/')
         sudo('cp -r /usr/share/doc/openvpn/examples/easy-rsa/2.0 /etc/openvpn/easy-rsa')
@@ -291,10 +291,9 @@ def openvpn_install():
                 sudo('openvpn --genkey --secret ta.key')
                 sudo('cp server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
 
-def openvpn_create_client_crt():
-    hostname = prompt("Host name?")
+def openvpn_create_client():
     with cd('/etc/openvpn/easy-rsa/'):
-        sudo('source vars; ./pkitool %s' % hostname)
+        sudo('source vars; ./build-key')
 
 #---------------------------
 # System Level
