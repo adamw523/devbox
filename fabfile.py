@@ -279,21 +279,73 @@ def vpn_install():
     sudo('service ipsec restart;  service xl2tpd restart')
 
 def openvpn_install():
-    fabtools.require.deb.packages(['openvpn', 'openvswitch-brcompat'])
-    if not exists('/etc/openvpn/easy-rsa/'):
-        # sudo('mkdir /etc/openvpn/easy-rsa/')
-        sudo('cp -r /usr/share/doc/openvpn/examples/easy-rsa/2.0 /etc/openvpn/easy-rsa')
-        put('configs/openvpn_vars.sh', '/etc/openvpn/easy-rsa/vars', use_sudo=True)
+    require.user('openvpn')
 
-        with cd('/etc/openvpn/easy-rsa'):
-            sudo('source ./vars; ./clean-all; ./build-dh; ./pkitool --initca; ./pkitool --server server')
-            with cd('keys'):
-                sudo('openvpn --genkey --secret ta.key')
-                sudo('cp server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
+    fabtools.require.deb.packages(['openvpn', 'openvswitch-brcompat'])
+    openvpn_vars = {
+        "KEY_COUNTRY": "CA",
+        "KEY_PROVINCE": "ON",
+        "KEY_CITY": "Toronto",
+        "KEY_ORG": "TouchBase Consulting",
+        "KEY_EMAIL": "adam@tbcn.ca",
+        "KEY_CN": "changeme",
+        "KEY_NAME": "changeme",
+        "KEY_OU": "changeme",
+        "network": '10.2.3.0'
+    }
+
+    if not exists('/home/openvpn/easy-rsa'):
+        # use openvpns easy-rsa to create keys and configure openvpn
+        with show('debug'):
+            sudo('mkdir ~openvpn/easy-rsa/', user='openvpn')
+            
+            # copy over easy-rsa tools from oepnvpn examples
+            sudo('cp -r /usr/share/doc/openvpn/examples/easy-rsa/2.0/* ~openvpn/easy-rsa/', user='openvpn')
+            sudo('chown -R openvpn:openvpn ~openvpn/easy-rsa')
+
+            # copy over server.conf file
+            upload_template('configs/openvpn_server.conf', '/etc/openvpn/server.conf', openvpn_vars, use_sudo=True)
+
+            # coy over our variables
+            upload_template('configs/openvpn_vars.sh', '/home/openvpn/easy-rsa/vars', openvpn_vars, use_sudo=True)
+
+            with cd('~openvpn/easy-rsa'):
+                # create keys
+                sudo('source ./vars; ./clean-all; ./build-dh; ./pkitool --initca; ./pkitool --server server', user='openvpn')
+                
+                with cd('keys'):
+                    # genreate the ta key and copy them into /etc/openvpn
+                    sudo('openvpn --genkey --secret ta.key', user='openvpn')
+                    sudo('mv server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
+                    sudo('chmod 400 /etc/openvpn/ta.key')
 
 def openvpn_create_client():
     with cd('/etc/openvpn/easy-rsa/'):
         sudo('source vars; ./build-key')
+
+def openvpn_download_visc():
+    hostname = prompt("Host name of the client:")
+
+    # set up a new directory to create our .visc configruation
+    tmp_dir = '/tmp/%s' % (hostname + '.visc')
+    if exists(tmp_dir):
+        sudo('rm -fR %s' % (tmp_dir))
+    
+    # vars for the configuration file
+    client_conf = {
+        "visc_name": hostname,
+        "server": env.hosts[0]
+    }
+
+    sudo('mkdir %s' % (tmp_dir))
+    sudo('cp /etc/openvpn/ca.crt %s/ca.crt' % (tmp_dir))
+    sudo('cp /etc/openvpn/server.crt %s/cert.crt' % (tmp_dir))
+    sudo('cp /etc/openvpn/server.key %s/key.key' % (tmp_dir))
+    sudo('cp /etc/openvpn/ta.key %s/ta.crt' % (tmp_dir))
+    upload_template('configs/client.visc/config.conf', '%s/config.conf' % (tmp_dir), client_conf, use_sudo=True)
+
+
+
 
 #---------------------------
 # System Level

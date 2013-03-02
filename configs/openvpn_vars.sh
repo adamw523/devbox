@@ -62,11 +62,11 @@ export KEY_EXPIRE=3650
 # These are the default values for fields
 # which will be placed in the certificate.
 # Don't leave any of these fields blank.
-export KEY_COUNTRY="CA"
-export KEY_PROVINCE="ON"
-export KEY_CITY="Toronto"
-export KEY_ORG="TouchBase Consulting"
-export KEY_EMAIL="adam@tbcn.ca"
-export KEY_CN=changeme
-export KEY_NAME=changeme
-export KEY_OU=changeme
+export KEY_COUNTRY="%(KEY_COUNTRY)s"
+export KEY_PROVINCE="%(KEY_PROVINCE)s"
+export KEY_CITY="%(KEY_CITY)s"
+export KEY_ORG="%(KEY_ORG)s"
+export KEY_EMAIL="%(KEY_EMAIL)s"
+export KEY_CN="%(KEY_CN)s"
+export KEY_NAME="%(KEY_NAME)s"
+export KEY_OU="%(KEY_OU)s"
