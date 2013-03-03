@@ -368,7 +368,7 @@ def openvpn_download_visc():
     sudo('chmod -R a+r %s' % (tmp_dir))
 
     # download .vsic directory and then delete it from server
-    get(tmp_dir, '%s.visc' % (hostname))
+    get(tmp_dir, '.')
     sudo('rm -fR %s' % (tmp_dir))
 
 #---------------------------
