@@ -298,30 +298,35 @@ def openvpn_install():
         "network": '10.2.3.0'
     }
 
+    # run on startup
+    # sudo('update-rc.d openvpn defaults')
+
     if not exists('/home/openvpn/easy-rsa'):
         # use openvpns easy-rsa to create keys and configure openvpn
-        with show('debug'):
-            sudo('mkdir ~openvpn/easy-rsa/', user='openvpn')
+        sudo('mkdir ~openvpn/easy-rsa/', user='openvpn')
+        
+        # copy over easy-rsa tools from oepnvpn examples
+        sudo('cp -r /usr/share/doc/openvpn/examples/easy-rsa/2.0/* ~openvpn/easy-rsa/', user='openvpn')
+        sudo('chown -R openvpn:openvpn ~openvpn/easy-rsa')
+
+        # copy over server.conf file
+        upload_template('configs/openvpn_server.conf', '/etc/openvpn/server.conf', openvpn_vars, use_sudo=True)
+
+        # coy over our variables
+        upload_template('configs/openvpn_vars.sh', '/home/openvpn/easy-rsa/vars', openvpn_vars, use_sudo=True)
+
+        with cd('~openvpn/easy-rsa'):
+            # create keys
+            sudo('source ./vars; ./clean-all; ./build-dh; ./pkitool --initca; ./pkitool --server server', user='openvpn')
             
-            # copy over easy-rsa tools from oepnvpn examples
-            sudo('cp -r /usr/share/doc/openvpn/examples/easy-rsa/2.0/* ~openvpn/easy-rsa/', user='openvpn')
-            sudo('chown -R openvpn:openvpn ~openvpn/easy-rsa')
+            with cd('keys'):
+                # genreate the ta key and copy them into /etc/openvpn
+                sudo('openvpn --genkey --secret ta.key', user='openvpn')
+                sudo('cp server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
+                sudo('chmod 400 /etc/openvpn/ta.key')
 
-            # copy over server.conf file
-            upload_template('configs/openvpn_server.conf', '/etc/openvpn/server.conf', openvpn_vars, use_sudo=True)
+        sudo('service openvpn start')
 
-            # coy over our variables
-            upload_template('configs/openvpn_vars.sh', '/home/openvpn/easy-rsa/vars', openvpn_vars, use_sudo=True)
-
-            with cd('~openvpn/easy-rsa'):
-                # create keys
-                sudo('source ./vars; ./clean-all; ./build-dh; ./pkitool --initca; ./pkitool --server server', user='openvpn')
-                
-                with cd('keys'):
-                    # genreate the ta key and copy them into /etc/openvpn
-                    sudo('openvpn --genkey --secret ta.key', user='openvpn')
-                    sudo('cp server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
-                    sudo('chmod 400 /etc/openvpn/ta.key')
 
 def openvpn_create_client():
     """
