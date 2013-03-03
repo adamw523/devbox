@@ -1,4 +1,5 @@
 import ConfigParser
+from fabric.utils import abort
 from fabric.api import *
 from fabric.operations import *
 from fabric.colors import green as _green
@@ -279,6 +280,9 @@ def vpn_install():
     sudo('service ipsec restart;  service xl2tpd restart')
 
 def openvpn_install():
+    """
+    Install OpenVPN on server
+    """
     require.user('openvpn')
 
     fabtools.require.deb.packages(['openvpn', 'openvswitch-brcompat'])
@@ -316,15 +320,31 @@ def openvpn_install():
                 with cd('keys'):
                     # genreate the ta key and copy them into /etc/openvpn
                     sudo('openvpn --genkey --secret ta.key', user='openvpn')
-                    sudo('mv server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
+                    sudo('cp server.crt server.key ca.crt dh1024.pem ta.key /etc/openvpn/')
                     sudo('chmod 400 /etc/openvpn/ta.key')
 
 def openvpn_create_client():
-    with cd('/etc/openvpn/easy-rsa/'):
-        sudo('source vars; ./build-key')
+    """
+    Create client keys on server
+    """
+    hostname = prompt("Host name of the client:")
+
+    # abort if client has been created already
+    if exists('/home/openvpn/easy-rsa/keys/%s.crt' % (hostname), use_sudo=True):
+        abort('Certificate for client already exists')
+
+    # creeate client keys
+    with cd('~openvpn/easy-rsa/'):
+        sudo('source vars; ./build-key %s' % hostname, user='openvpn')
 
 def openvpn_download_visc():
+    """
+    Download OpenVPN configuration files for Viscosity
+    """
     hostname = prompt("Host name of the client:")
+
+    if not exists('/home/openvpn/easy-rsa/keys/%s.crt' % (hostname), use_sudo=True):
+        abort('Create client keys first with: openvpn_create_client')
 
     # set up a new directory to create our .visc configruation
     tmp_dir = '/tmp/%s' % (hostname + '.visc')
@@ -337,15 +357,19 @@ def openvpn_download_visc():
         "server": env.hosts[0]
     }
 
+    # make tmp directory, copy required items into it
     sudo('mkdir %s' % (tmp_dir))
     sudo('cp /etc/openvpn/ca.crt %s/ca.crt' % (tmp_dir))
-    sudo('cp /etc/openvpn/server.crt %s/cert.crt' % (tmp_dir))
-    sudo('cp /etc/openvpn/server.key %s/key.key' % (tmp_dir))
-    sudo('cp /etc/openvpn/ta.key %s/ta.crt' % (tmp_dir))
+    # sudo('cp /etc/openvpn/server.crt %s/server.crt' % (tmp_dir))
+    sudo('cp ~openvpn/easy-rsa/keys/%s.crt %s/cert.crt' % (hostname, tmp_dir))
+    sudo('cp ~openvpn/easy-rsa/keys/%s.key %s/key.key' % (hostname, tmp_dir))
+    sudo('cp /etc/openvpn/ta.key %s/ta.key' % (tmp_dir))
     upload_template('configs/client.visc/config.conf', '%s/config.conf' % (tmp_dir), client_conf, use_sudo=True)
+    sudo('chmod -R a+r %s' % (tmp_dir))
 
-
-
+    # download .vsic directory and then delete it from server
+    get(tmp_dir, '%s.visc' % (hostname))
+    sudo('rm -fR %s' % (tmp_dir))
 
 #---------------------------
 # System Level
