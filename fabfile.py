@@ -148,16 +148,17 @@ def ipython_notebook_install():
     run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests' % env.user)
 
     # install basemap
-    basemap = run('/home/%s/notebookenv/bin/pip freeze |grep basemap' % env.user)
+    basemap = run('/home/%s/notebookenv/bin/pip freeze |grep basemap' % env.user, warn_only=True)
     if not basemap:
         if not exists('/usr/lib/libgeos.so'):
             sudo('ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos.so')
 
         with cd('/tmp/'):
-            # run('wget http://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-1.0.6/basemap-1.0.6.tar.gz')
-            # run('tar -xzf basemap-1.0.6.tar.gz')
+            run('wget http://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-1.0.6/basemap-1.0.6.tar.gz')
+            run('tar -xzf basemap-1.0.6.tar.gz')
             with cd('basemap-1.0.6'):
                 run('/home/%s/notebookenv/bin/python setup.py install' % env.user)
+            run('rm -fR basemap-1.0.6')
 
     # link the OpenCV module into our virtualenv
     if not exists('/home/%s/notebookenv/lib/python2.7/site-packages/cv2.so' % env.user):
@@ -168,12 +169,8 @@ def ipython_notebook_install():
         run('mkdir ~/.ipython')
     put('configs/profile_nbserver', '~/.ipython/')
 
-    # make a directory to put our notbooks in
-    if not exists('/data/notebooks'):
-        run('mkdir /data/notebooks')
-
     # nbconvert
-    docutils = run('/home/%s/notebookenv/bin/pip freeze |grep docutils' % env.user)
+    docutils = run('/home/%s/notebookenv/bin/pip freeze |grep docutils' % env.user, warn_only=True)
     if not docutils:
         with cd('/tmp'):
             run('curl http://docutils.svn.sourceforge.net/viewvc/docutils/trunk/docutils/?view=tar > docutils.tgz')
@@ -185,8 +182,8 @@ def ipython_notebook_install():
             run('git clone git@github.com:adamw523/nbconvert.git ~/tools/nbconvert')
 
 def ipython_notebook_run():
-    with cd('~//data/notebooks'):
-        run('/home/%s/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ')
+    with cd('~/AeroFS/devshare/notebooks'):
+        run('/home/%s/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ' % env.user)
 
 #---------------------------
 # Ruby / Rails Env
