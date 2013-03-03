@@ -247,38 +247,6 @@ def aerofs_run():
 #---------------------------
 # VPN
 #---------------------------
-def vpn_install():
-    # follwing instructions: https://raymii.org/s/tutorials/IPSEC_L2TP_vpn_with_Ubuntu_12.04.html
-    # fabtools.require.deb.packages(['openswan', 'xl2tpd', 'ppp', 'lsof', 'libgmp3c2', 'linux-generic'])
-    fabtools.require.deb.packages(['openswan', 'xl2tpd', 'ppp', 'lsof'])
-
-    sudo('iptables --table nat --append POSTROUTING --jump MASQUERADE')
-
-    sudo('echo "net.ipv4.ip_forward = 1" |  tee -a /etc/sysctl.conf')
-    sudo('echo "net.ipv4.conf.all.accept_redirects = 0" |  tee -a /etc/sysctl.conf')
-    sudo('echo "net.ipv4.conf.all.send_redirects = 0" |  tee -a /etc/sysctl.conf')
-    sudo('for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects; echo 0 > $vpn/send_redirects; done')
-    sudo('sysctl -p')
-
-    append('/etc/rc.local', "for vpn in /proc/sys/net/ipv4/conf/*; do echo 0 > $vpn/accept_redirects;", use_sudo=True)
-    append('/etc/rc.local', "echo 0 > $vpn/send_redirects; done", use_sudo=True)
-    append('/etc/rc.local', "iptables --table nat --append POSTROUTING --jump MASQUERADE", use_sudo=True)
-
-    put('configs/ipsec.conf', '/etc/ipsec.conf', use_sudo=True)
-    put('private/ipsec.secrets', '/etc/ipsec.secrets', use_sudo=True, mode=0600)
-
-    # back up original config
-    if contains('/etc/xl2tpd/xl2tpd.conf', 'Sample l2tpd configuration file'):
-        sudo('cp /etc/xl2tpd/xl2tpd.conf /etc/xl2tpd/xl2tpd.conf.orig')
-
-    put('configs/xl2tpd.conf', '/etc/xl2tpd/xl2tpd.conf', use_sudo=True)
-
-    append('/etc/ppp/chap-secrets', '# Secrets for authentication using CHAP', use_sudo=True)
-    append('/etc/ppp/chap-secrets', '# client       server  secret                  IP addresses', use_sudo=True)
-    append('/etc/ppp/chap-secrets', 'deploy         l2tpd   deploy            *', use_sudo=True)
-
-    sudo('service ipsec restart;  service xl2tpd restart')
-
 def openvpn_install():
     """
     Install OpenVPN on server
