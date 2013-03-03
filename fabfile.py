@@ -132,6 +132,8 @@ def ipython_install():
     sudo('pip install ipython virtualenv')
 
 def ipython_notebook_install():
+    ipython_install()
+
     fabtools.require.deb.packages(['libatlas-base-dev', 'gfortran', 'python-scipy', 
         'libfreetype6', 'libfreetype6-dev', 'libpng12-dev', 'python-opencv', 'pandoc',
         'libgeos-dev'])
@@ -140,12 +142,13 @@ def ipython_notebook_install():
         run('virtualenv notebookenv')
 
     # install iPython notebook requirements in our virtualenv
-    run('/home/vagrant/notebookenv/bin/pip install ipython tornado readline nose pexpect pyzmq pygments')
-    run('/home/vagrant/notebookenv/bin/pip install numpy scipy matplotlib feedparser nose tdaemon')
-    run('/home/vagrant/notebookenv/bin/pip install pysqlite PIL markdown requests')
+    run('/home/%s/notebookenv/bin/pip install ipython tornado readline nose pexpect pyzmq pygments' % env.user)
+    run('/home/%s/notebookenv/bin/pip install numpy' % env.user)
+    run('/home/%s/notebookenv/bin/pip install scipy matplotlib feedparser nose tdaemon' % env.user)
+    run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests' % env.user)
 
     # install basemap
-    basemap = run('/home/vagrant/notebookenv/bin/pip freeze |grep basemap')
+    basemap = run('/home/%s/notebookenv/bin/pip freeze |grep basemap' % env.user)
     if not basemap:
         if not exists('/usr/lib/libgeos.so'):
             sudo('ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos.so')
@@ -154,12 +157,11 @@ def ipython_notebook_install():
             # run('wget http://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-1.0.6/basemap-1.0.6.tar.gz')
             # run('tar -xzf basemap-1.0.6.tar.gz')
             with cd('basemap-1.0.6'):
-                run('/home/vagrant/notebookenv/bin/python setup.py install')
-
+                run('/home/%s/notebookenv/bin/python setup.py install' % env.user)
 
     # link the OpenCV module into our virtualenv
-    if not exists('/home/vagrant/notebookenv/lib/python2.7/site-packages/cv2.so'):
-        run('ln -s /usr/lib/pyshared/python2.7/cv2.so /home/vagrant/notebookenv/lib/python2.7/site-packages/')
+    if not exists('/home/%s/notebookenv/lib/python2.7/site-packages/cv2.so' % env.user):
+        run('ln -s /usr/lib/pyshared/python2.7/cv2.so /home/%s/notebookenv/lib/python2.7/site-packages/' % env.user)
 
     # configuraiton for notbook server
     if not exists('~/.ipython'):
@@ -171,11 +173,11 @@ def ipython_notebook_install():
         run('mkdir /data/notebooks')
 
     # nbconvert
-    docutils = run('/home/vagrant/notebookenv/bin/pip freeze |grep docutils')
+    docutils = run('/home/%s/notebookenv/bin/pip freeze |grep docutils' % env.user)
     if not docutils:
         with cd('/tmp'):
             run('curl http://docutils.svn.sourceforge.net/viewvc/docutils/trunk/docutils/?view=tar > docutils.tgz')
-            run('/home/vagrant/notebookenv/bin/pip install docutils.tgz')
+            run('/home/%s/notebookenv/bin/pip install docutils.tgz' % env.user)
 
     run('mkdir -p ~/tools')
     if not exists('~/tools/nbconvert'):
@@ -183,8 +185,8 @@ def ipython_notebook_install():
             run('git clone git@github.com:adamw523/nbconvert.git ~/tools/nbconvert')
 
 def ipython_notebook_run():
-    with cd('/data/notebooks'):
-        run('/home/vagrant/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ')
+    with cd('~//data/notebooks'):
+        run('/home/%s/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ')
 
 #---------------------------
 # Ruby / Rails Env
@@ -266,9 +268,7 @@ def openvpn_install():
         "network": '10.2.3.0'
     }
 
-    # run on startup
-    # sudo('update-rc.d openvpn defaults')
-
+    # install if easy-rsa hasn't been copied over and used yet
     if not exists('/home/openvpn/easy-rsa'):
         # use openvpns easy-rsa to create keys and configure openvpn
         sudo('mkdir ~openvpn/easy-rsa/', user='openvpn')
@@ -295,6 +295,10 @@ def openvpn_install():
 
         sudo('service openvpn start')
 
+    # open up the firewall
+    sudo('ufw allow 1194/udp')
+    sudo('ufw allow 1194/tcp')
+    sudo('ufw allow from %s/24' % (openvpn_vars['network']))
 
 def openvpn_create_client():
     """
@@ -354,7 +358,6 @@ def install_devtools():
     fabtools.require.deb.packages(['build-essential', 'screen', 'tmux', 'libsqlite3-dev', 
         'git', 'git-svn', 'subversion', 'swig', 'libjpeg-turbo8-dev', 'libjpeg8-dev'])
 
-
     quantal64 = run('uname -a |grep quantal64', warn_only=True)
     if quantal64:
         # hack to fix Python PIL
@@ -372,6 +375,7 @@ def install_devtools():
     run('git config --global user.email "adamw@tbcn.ca"')
 
     # python
+    fabtools.require.deb.packages(['python-pip', 'libssl-dev', 'python-dev']) 
     sudo('pip install hyde feedparser fabric dodo M2Crypto virtualenvwrapper')
 
     setup_bash()
@@ -379,6 +383,15 @@ def install_devtools():
 def setup_bash():
     put('configs/bashrc.after', '/home/%s/.bashrc.after' % env.user)
     append('/home/%s/.bashrc' % env.user, "\n. .bashrc.after")
+
+def lock_down_firewall():
+    """
+    Install Uncomplicated Firewall and lock down everything except for SSH
+    """
+    fabtools.require.deb.packages(['ufw']) 
+    sudo('ufw default deny')
+    sudo('ufw enable')
+    sudo('ufw allow ssh')
 
 def update_system(force=True):
     """
