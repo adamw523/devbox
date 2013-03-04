@@ -183,7 +183,7 @@ def ipython_notebook_install():
 
 def ipython_notebook_run():
     with cd('~/AeroFS/devshare/notebooks'):
-        run('/home/%s/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ' % env.user)
+        _runbg('/home/%s/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ' % env.user)
 
 #---------------------------
 # Ruby / Rails Env
