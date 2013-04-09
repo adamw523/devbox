@@ -148,7 +148,7 @@ def ipython_notebook_install():
 
     fabtools.require.deb.packages(['libatlas-base-dev', 'gfortran', 'python-scipy', 
         'libfreetype6', 'libfreetype6-dev', 'libpng12-dev', 'python-opencv', 'pandoc',
-        'libgeos-dev'])
+        'libgeos-dev', 'libjpeg-dev'])
 
     if not exists('notebookenv'):
         run('virtualenv notebookenv')
