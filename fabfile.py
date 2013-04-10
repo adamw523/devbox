@@ -376,6 +376,10 @@ def install_devtools():
             libs = ['libfreetype.so', 'libpng.so', 'libz.so', 'libjpeg.so']
             for lib in libs:
                 sudo('if [ ! -L /usr/lib/%s ]; then ln -s /usr/lib/x86_64-linux-gnu/%s /usr/lib; fi' % (lib, lib))
+        else:
+            for lib in libs:
+                sudo('if [ ! -L /usr/lib/%s ]; then ln -s /usr/lib/i386-linux-gnu/%s /usr/lib; fi' % (lib, lib))
+
 
     # SSH config
     put('private/ssh/id_rsa_devbox', '/home/%s/.ssh/id_rsa' % env.user, mode=0600)
