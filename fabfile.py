@@ -361,6 +361,17 @@ def openvpn_download_visc():
 #---------------------------
 # System Level
 #---------------------------
+
+def create_swapfile():
+    haveswap = run('swapon -s')
+    if not haveswap:
+        sudo('dd if=/dev/zero of=/swapfile bs=1024 count=512k')
+        sudo('mkswap /swapfile')
+        sudo('swapon /swapfile')
+        append('/etc/fstab', '/swapfile       none    swap    sw      0       0', use_sudo=True)
+
+
+
 def install_devtools():
     """
     Install development tools
