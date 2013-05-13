@@ -158,7 +158,7 @@ def ipython_notebook_install():
     run('/home/%s/notebookenv/bin/pip install numpy' % env.user)
     run('/home/%s/notebookenv/bin/pip install scipy matplotlib feedparser nose tdaemon' % env.user)
     run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests' % env.user)
-    run('/home/%s/notebookenv/bin/pip install pandas networkx' % env.user)
+    run('/home/%s/notebookenv/bin/pip install pandas networkx oauth2' % env.user)
 
     # install basemap
     basemap = run('/home/%s/notebookenv/bin/pip freeze |grep basemap' % env.user, warn_only=True)
