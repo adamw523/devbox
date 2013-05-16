@@ -378,13 +378,13 @@ def install_devtools():
     """
     fabtools.require.deb.packages(['build-essential', 'screen', 'tmux', 'libsqlite3-dev', 
         'git', 'git-svn', 'subversion', 'swig', 'libjpeg-turbo8-dev', 'libjpeg8-dev',
-        'mercurial'])
+        'mercurial', 'sqlite3'])
 
     with settings(warn_only=True):
         quantal64 = run('uname -a |grep quantal64')
+        libs = ['libfreetype.so', 'libpng.so', 'libz.so', 'libjpeg.so']
         if quantal64:
             # hack to fix Python PIL
-            libs = ['libfreetype.so', 'libpng.so', 'libz.so', 'libjpeg.so']
             for lib in libs:
                 sudo('if [ ! -L /usr/lib/%s ]; then ln -s /usr/lib/x86_64-linux-gnu/%s /usr/lib; fi' % (lib, lib))
         else:
