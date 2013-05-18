@@ -148,7 +148,7 @@ def ipython_notebook_install():
 
     fabtools.require.deb.packages(['libatlas-base-dev', 'gfortran', 'python-scipy', 
         'libfreetype6', 'libfreetype6-dev', 'libpng12-dev', 'python-opencv', 'pandoc',
-        'libgeos-dev', 'libjpeg-dev'])
+        'libgeos-dev', 'libjpeg-dev', 'libhdf5-dev'])
 
     if not exists('notebookenv'):
         run('virtualenv notebookenv')
@@ -157,8 +157,8 @@ def ipython_notebook_install():
     run('/home/%s/notebookenv/bin/pip install ipython tornado readline nose pexpect pyzmq pygments' % env.user)
     run('/home/%s/notebookenv/bin/pip install numpy' % env.user)
     run('/home/%s/notebookenv/bin/pip install scipy matplotlib feedparser nose tdaemon' % env.user)
-    run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests' % env.user)
-    run('/home/%s/notebookenv/bin/pip install pandas networkx oauth2 beautifulsoup4' % env.user)
+    run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests numexpr cython' % env.user)
+    run('/home/%s/notebookenv/bin/pip install pandas networkx oauth2 beautifulsoup4 tables' % env.user)
 
     # install basemap
     basemap = run('/home/%s/notebookenv/bin/pip freeze |grep basemap' % env.user, warn_only=True)
