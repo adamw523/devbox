@@ -230,6 +230,12 @@ def vim_janus_install():
     vim_copy_config()
 
 #---------------------------
+# tmux
+#---------------------------
+def tmux_copy_config():
+    put('configs/tmux.conf', '/home/%s/.tmux.conf' % env.user)
+
+#---------------------------
 # AWS
 #---------------------------
 def aws_install_boto():
