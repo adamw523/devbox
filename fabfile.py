@@ -233,7 +233,7 @@ def vim_janus_install():
 # AWS
 #---------------------------
 def aws_install_boto():
-    sudo('pip install boto')
+    sudo('pip install boto boto-rsync')
 
 def aws_copy_creds():
     put('private/boto.cfg', '/etc/boto.cfg', use_sudo=True)
