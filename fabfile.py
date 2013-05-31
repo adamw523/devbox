@@ -160,19 +160,6 @@ def ipython_notebook_install():
     run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests numexpr cython' % env.user)
     run('/home/%s/notebookenv/bin/pip install pandas networkx oauth2 beautifulsoup4 tables nltk' % env.user)
 
-    # install basemap
-    basemap = run('/home/%s/notebookenv/bin/pip freeze |grep basemap' % env.user, warn_only=True)
-    if not basemap:
-        if not exists('/usr/lib/libgeos.so'):
-            sudo('ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos.so')
-
-        with cd('/tmp/'):
-            run('wget http://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-1.0.6/basemap-1.0.6.tar.gz')
-            run('tar -xzf basemap-1.0.6.tar.gz')
-            with cd('basemap-1.0.6'):
-                run('/home/%s/notebookenv/bin/python setup.py install' % env.user)
-            run('rm -fR basemap-1.0.6')
-
     # link the OpenCV module into our virtualenv
     if not exists('/home/%s/notebookenv/lib/python2.7/site-packages/cv2.so' % env.user):
         run('ln -s /usr/lib/pyshared/python2.7/cv2.so /home/%s/notebookenv/lib/python2.7/site-packages/' % env.user)
@@ -197,6 +184,36 @@ def ipython_notebook_install():
 def ipython_notebook_run():
     with cd('~/AeroFS/devshare/notebooks'):
         _runbg('/home/%s/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ' % env.user)
+
+#---------------------------
+# GIS libraries for Notebook
+#---------------------------
+def notebook_gis_install():
+    # install basemap
+    with settings(warn_only=True):
+        basemap = run('/home/%s/notebookenv/bin/pip freeze |grep basemap' % env.user)
+
+    if not basemap:
+        if not exists('/usr/lib/libgeos.so'):
+            sudo('ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos.so')
+
+        with cd('/tmp/'):
+            run('wget http://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-1.0.6/basemap-1.0.6.tar.gz')
+            run('tar -xzf basemap-1.0.6.tar.gz')
+            with cd('basemap-1.0.6'):
+                run('/home/%s/notebookenv/bin/python setup.py install' % env.user)
+            run('rm -fR basemap-1.0.6')
+
+    # install shapefile library
+    with settings(warn_only=True):
+        shapefile = run('/home/%s/notebookenv/bin/pip freeze |grep shapefile' % env.user)
+
+    if not shapefile:
+        with cd('/tmp/'):
+            run('git clone https://github.com/adamw523/pyshp.git')
+            with cd('pyshp'):
+                run('/home/%s/notebookenv/bin/python setup.py install' % env.user)
+            run('rm -fR pyshp')
 
 #---------------------------
 # Ruby / Rails Env
@@ -288,7 +305,7 @@ def openvpn_install():
     if not exists('/home/openvpn/easy-rsa'):
         # use openvpns easy-rsa to create keys and configure openvpn
         sudo('mkdir ~openvpn/easy-rsa/', user='openvpn')
-        
+
         # copy over easy-rsa tools from oepnvpn examples
         sudo('cp -r /usr/share/doc/openvpn/examples/easy-rsa/2.0/* ~openvpn/easy-rsa/', user='openvpn')
         sudo('chown -R openvpn:openvpn ~openvpn/easy-rsa')
@@ -302,7 +319,7 @@ def openvpn_install():
         with cd('~openvpn/easy-rsa'):
             # create keys
             sudo('source ./vars; ./clean-all; ./build-dh; ./pkitool --initca; ./pkitool --server server', user='openvpn')
-            
+
             with cd('keys'):
                 # genreate the ta key and copy them into /etc/openvpn
                 sudo('openvpn --genkey --secret ta.key', user='openvpn')
@@ -343,7 +360,7 @@ def openvpn_download_visc():
     tmp_dir = '/tmp/%s' % (hostname + '.visc')
     if exists(tmp_dir):
         sudo('rm -fR %s' % (tmp_dir))
-    
+
     # vars for the configuration file
     client_conf = {
         "visc_name": hostname,
@@ -409,7 +426,7 @@ def install_devtools():
 
     # python
     fabtools.require.deb.packages(['python-pip', 'libssl-dev', 'python-dev']) 
-    sudo('pip install hyde feedparser fabric dodo M2Crypto virtualenvwrapper')
+    sudo('pip install hyde feedparser fabric dodo M2Crypto virtualenvwrapper fabtools')
 
     setup_bash()
 
