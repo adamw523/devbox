@@ -432,7 +432,7 @@ def install_devtools():
 
 def setup_bash():
     put('configs/bashrc.after', '/home/%s/.bashrc.after' % env.user)
-    append('/home/%s/.bashrc' % env.user, "\n. .bashrc.after")
+    append('/home/%s/.bashrc' % env.user, "\n. ~/.bashrc.after")
 
 def lock_down_firewall():
     """
