@@ -160,7 +160,7 @@ def ipython_notebook_install():
     run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests numexpr cython' % env.user)
     run('/home/%s/notebookenv/bin/pip install pandas networkx oauth2 beautifulsoup4 tables nltk' % env.user)
     run('/home/%s/notebookenv/bin/pip install scikit-learn paramiko' % env.user)
-    
+    run('/home/%s/notebookenv/bin/pip install scikit-image' % env.user)
 
     # link the OpenCV module into our virtualenv
     if not exists('/home/%s/notebookenv/lib/python2.7/site-packages/cv2.so' % env.user):
