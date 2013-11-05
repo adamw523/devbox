@@ -154,13 +154,14 @@ def ipython_notebook_install():
         run('virtualenv notebookenv')
 
     # install iPython notebook requirements in our virtualenv
-    run('/home/%s/notebookenv/bin/pip install ipython tornado readline nose pexpect pyzmq pygments' % env.user)
+    run('/home/%s/notebookenv/bin/pip install ipython tornado readline nose pexpect pyzmq pygments pytest mock' % env.user)
     run('/home/%s/notebookenv/bin/pip install numpy' % env.user)
     run('/home/%s/notebookenv/bin/pip install scipy matplotlib feedparser nose tdaemon' % env.user)
     run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests numexpr cython' % env.user)
     run('/home/%s/notebookenv/bin/pip install pandas networkx oauth2 beautifulsoup4 tables nltk' % env.user)
     run('/home/%s/notebookenv/bin/pip install scikit-learn paramiko' % env.user)
     run('/home/%s/notebookenv/bin/pip install scikit-image' % env.user)
+    run('/home/%s/notebookenv/bin/pip install nosecolor nose-watch argcomplete' % env.user)
 
     # link the OpenCV module into our virtualenv
     if not exists('/home/%s/notebookenv/lib/python2.7/site-packages/cv2.so' % env.user):
@@ -403,7 +404,7 @@ def install_devtools():
     """
     fabtools.require.deb.packages(['build-essential', 'screen', 'tmux', 'libsqlite3-dev', 
         'git', 'git-svn', 'subversion', 'swig', 'libjpeg-turbo8-dev', 'libjpeg8-dev',
-        'mercurial', 'sqlite3'])
+        'mercurial', 'sqlite3', 'bash-completion'])
 
     with settings(warn_only=True):
         quantal64 = run('uname -a |grep quantal64')
