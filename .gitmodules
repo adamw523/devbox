@@ -1,0 +1,3 @@
+[submodule "devbox_openvpn"]
+	path = devbox_openvpn
+	url = git@github.com:adamw523/devbox_openvpn.git
