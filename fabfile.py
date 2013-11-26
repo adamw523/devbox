@@ -163,6 +163,7 @@ def ipython_notebook_install():
     run('/home/%s/notebookenv/bin/pip install scikit-learn paramiko' % env.user)
     run('/home/%s/notebookenv/bin/pip install scikit-image' % env.user)
     run('/home/%s/notebookenv/bin/pip install nosecolor nose-watch argcomplete' % env.user)
+    run('/home/%s/notebookenv/bin/pip install boto' % env.user)
 
     # link the OpenCV module into our virtualenv
     if not exists('/home/%s/notebookenv/lib/python2.7/site-packages/cv2.so' % env.user):
