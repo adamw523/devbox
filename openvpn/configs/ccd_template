@@ -1,0 +1,1 @@
+ifconfig-push %(network_pref)s%(oct1)s %(network_pref)s%(oct2)s

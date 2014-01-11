@@ -5,9 +5,11 @@ from fabric.operations import *
 from fabric.colors import green as _green
 from fabric.colors import yellow as _yellow
 from fabric.colors import red as _red
-from fabric.contrib.files import *
+from fabric.context_managers import cd, remote_tunnel
+from fabric.contrib.files import append, exists, sed, upload_template
+# from fabric import context_managers
 from fabtools import require
-from devbox_openvpn import *
+from openvpn.fab_inc import *
 import fabtools
 import os.path
 import sys
@@ -284,6 +286,51 @@ def aerofs_run_once():
 def aerofs_run():
     _runbg('aerofs-cli')
 
+#----------------------------
+# Docker
+#----------------------------
+def docker_install():
+    update_system(force=False)
+    sudo("sh -c 'wget -qO- https://get.docker.io/gpg | apt-key add -'")
+    append('/etc/apt/sources.list.d/docker.list', 'deb http://get.docker.io/ubuntu docker main', use_sudo=True)
+    #update_system()
+    fabtools.require.deb.packages(['lxc-docker'])
+    fabtools.user.modify('deploy', extra_groups=['docker'])
+
+    # have Docker listen on TCP as well as the socket
+    # sed('/etc/init/docker.conf', 'DOCKER_OPTS=', 'DOCKER_OPTS="-H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock"', use_sudo=True)
+
+    # create docker directories
+    fabtools.require.files.directories(['/home/deploy/docker/ids'])
+
+    # defalt ufw to allow NATed ports
+    sed('/etc/default/ufw', 'DEFAULT_FORWARD_POLICY="DROP"', 'DEFAULT_FORWARD_POLICY="ACCEPT"', use_sudo=True)
+    sudo('ufw reload')
+
+def docker_port_maps(container, port):
+    pass
+
+#---------------------------
+# OpenVPN Client
+#---------------------------
+def configure_openvpn_client(zip_path=None):
+    """
+    Configure devbox as OpenVPN client
+    """
+    if not zip_path:
+        abort("Please provide a path to zip config ovpn file. eg: configure_openvpn_client:adam.zip")
+
+    fabtools.require.deb.packages(['openvpn'])
+    run('mkdir -p /tmp/client.ovpn')
+    put(zip_path, '/tmp/client.ovpn/client.ovpn.zip')
+    with cd('/tmp/client.ovpn'):
+        run('unzip client.ovpn.zip')
+        dirname = run("dirname `find . -name 'cert.crt' | head -n1`")
+        sudo("cp %(dn)s/key.key %(dn)s/ca.crt %(dn)s/ta.key %(dn)s/cert.crt /etc/openvpn/" % {'dn': dirname})
+        sudo("cp %(dn)s/config.ovpn /etc/openvpn/client.conf" % {'dn': dirname})
+    
+    sudo('service openvpn restart')
+    run('rm -fR /tmp/client.ovpn')
 
 
 #---------------------------
@@ -291,13 +338,11 @@ def aerofs_run():
 #---------------------------
 
 def create_swapfile():
-    haveswap = run('swapon -s')
-    if not haveswap:
-        sudo('dd if=/dev/zero of=/swapfile bs=1024 count=512k')
-        sudo('mkswap /swapfile')
-        sudo('swapon /swapfile')
-        append('/etc/fstab', '/swapfile       none    swap    sw      0       0', use_sudo=True)
-
+    sudo('swapoff -a')
+    sudo('fallocate -l 1024M /swapfile')
+    sudo('chmod 600 /swapfile')
+    sudo('mkswap /swapfile')
+    sudo('swapon /swapfile')
 
 
 def install_devtools():
@@ -306,7 +351,7 @@ def install_devtools():
     """
     fabtools.require.deb.packages(['build-essential', 'screen', 'tmux', 'libsqlite3-dev', 
         'git', 'git-svn', 'subversion', 'swig', 'libjpeg-turbo8-dev', 'libjpeg8-dev',
-        'mercurial', 'sqlite3', 'bash-completion'])
+        'mercurial', 'sqlite3', 'bash-completion', 'libssl-dev'])
 
     with settings(warn_only=True):
         quantal64 = run('uname -a |grep quantal64')
@@ -330,8 +375,12 @@ def install_devtools():
     run('git config --global user.email "adamw@tbcn.ca"')
 
     # python
-    fabtools.require.deb.packages(['python-pip', 'libssl-dev', 'python-dev']) 
-    sudo('pip install hyde feedparser fabric dodo M2Crypto virtualenvwrapper fabtools')
+    fabtools.require.deb.packages(['python-pip', 'libssl-dev', 'python-dev'])
+    sudo('pip install hyde feedparser fabric dodo virtualenvwrapper fabtools')
+
+    # M2Crypto pip not installing on Ubuntu 13.10 .. fix might be below, if package needed
+    # http://blog.rectalogic.com/2013/11/installing-m2crypto-in-python.html
+    # DEB_HOST_MULTIARCH=x86_64-linux-gnu pip install "git+git://anonscm.debian.org/collab-maint/m2crypto.git@debian/0.21.1-3#egg=M2Crypto"
 
     setup_bash()
 
