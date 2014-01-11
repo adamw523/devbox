@@ -17,10 +17,5 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # OpenVPN
 VOLUME /etc/openvpn
 VOLUME /root/easy-rsa
-# ADD server.conf /etc/openvpn/server.conf
-
-RUN apt-get install -qy lsof telnet netcat
-
-EXPOSE 22 23 24
 
 CMD ["/usr/bin/supervisord"]
