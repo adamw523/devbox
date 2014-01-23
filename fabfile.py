@@ -1,4 +1,3 @@
-import ConfigParser
 from fabric.utils import abort
 from fabric.api import *
 from fabric.operations import *
@@ -9,8 +8,12 @@ from fabric.context_managers import cd, remote_tunnel
 from fabric.contrib.files import append, exists, sed, upload_template
 # from fabric import context_managers
 from fabtools import require
-from openvpn.fab_inc import *
 import fabtools
+
+from aerofs.fab_inc import *
+from openvpn.fab_inc import *
+
+import ConfigParser
 import os.path
 import sys
 
@@ -270,21 +273,6 @@ def aws_copy_creds():
 
 def aws_copy_MailStore():
     run('python /vagrant/scripts/upload_MailStore.py')
-
-#----------------------------
-# AeroFS
-#----------------------------
-def aerofs_install():
-    fabtools.require.deb.packages(['openjdk-7-jre', 'openjdk-7-jdk', 'default-jre', 
-        'sharutils', 'dtach'])
-    put('lib/aerofs-installer.deb', '/tmp/')
-    sudo('dpkg -i /tmp/aerofs-installer.deb')
-
-def aerofs_run_once():
-    run('aerofs-cli')
-
-def aerofs_run():
-    _runbg('aerofs-cli')
 
 #----------------------------
 # Docker
