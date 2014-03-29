@@ -38,16 +38,6 @@ def oc_build_self_signed_cert():
     # Sign the CSR
     local("openssl x509 -req -days 365 -in private/owncloud/server.csr -signkey private/owncloud/server.key -out private/owncloud/server.crt")
 
-#writing RSA key
-#$ rm server.pass.key
-#$ openssl req -new -key server.key -out server.csr
-#...
-#Country Name (2 letter code) [AU]:US
-#State or Province Name (full name) [Some-State]:California
-#...
-#A challenge password []:
-#...
-
 
 #----------------------------
 # Inside ownCloud Server container
