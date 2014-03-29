@@ -29,6 +29,4 @@ ADD ./001-owncloud.conf /etc/apache2/sites-available/
 RUN ln -s /etc/apache2/sites-available/001-owncloud.conf /etc/apache2/sites-enabled/
 RUN a2enmod rewrite
 
-
-
 CMD ["/usr/bin/supervisord"]
