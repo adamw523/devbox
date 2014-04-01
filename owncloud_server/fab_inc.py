@@ -2,7 +2,7 @@ import ConfigParser
 import fabtools
 import re
 
-from fabric.api import abort, env, get, prompt, put, run, sudo
+from fabric.api import abort, env, get, local, prompt, put, run, sudo
 from fabric.context_managers import cd, remote_tunnel
 from fabric.contrib.files import append, exists, sed, upload_template
 
@@ -15,13 +15,33 @@ def _oc_server_docker_vars():
         'public_http_port': 8080
     }
 
+def _private_oc_config():
+    # get config file
+    config = ConfigParser.ConfigParser()
+    config.read(['private/owncloud_server.cfg'])
+    return config
+
+#----------------------------
+# Local commands
+#----------------------------
+
+def oc_build_self_signed_cert():
+    config_vars = _private_oc_config()
+    local("mkdir -p private/owncloud")
+    local("openssl genrsa -des3 -passout pass:x -out private/owncloud/server.pass.key 2048")
+    local("openssl rsa -passin pass:x -in private/owncloud/server.pass.key -out private/owncloud/server.key")
+    local("rm private/owncloud/server.pass.key")
+    # Create the CSR
+    subj = "\"/C=%(country)s/ST=%(state)s/L=%(locality)s/O=%(org_name)s/CN=%(server_address)s\"" % dict(config_vars.items('owncloud'))
+    local("openssl req -new -key private/owncloud/server.key -out private/owncloud/server.csr -subj %(subj)s" % {'subj': subj})
+
+    # Sign the CSR
+    local("openssl x509 -req -days 365 -in private/owncloud/server.csr -signkey private/owncloud/server.key -out private/owncloud/server.crt")
+
+
 #----------------------------
 # Inside ownCloud Server container
 #----------------------------
-
-def _runbg(cmd, sockname="dtach"):
-    return run('dtach -n `mktemp -u /tmp/%s.XXXX` %s'  % (sockname,cmd))
-
 
 
 #----------------------------
