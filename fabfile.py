@@ -424,3 +424,6 @@ def _get_vagrant_config():
 
     return conf
 
+def shell():
+    open_shell()
+
