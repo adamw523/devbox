@@ -1,6 +1,6 @@
 from fabric.utils import abort
-from fabric.api import *
-from fabric.operations import *
+from fabric.api import settings
+from fabric.operations import open_shell
 from fabric.colors import green as _green
 from fabric.colors import yellow as _yellow
 from fabric.colors import red as _red
@@ -42,6 +42,20 @@ def dodo():
 	# set values from config
 	env.hosts = [config.get('dodo', 'host')]
 	env.user = config.get('dodo', 'user')
+
+def minee():
+	"""
+	Select minee environment
+	"""
+
+	# get config file
+	config = ConfigParser.ConfigParser()
+	config.read(['private/minee.cfg'])
+
+	# set values from config
+	env.hosts = [config.get('minee', 'host')]
+	env.user = config.get('minee', 'user')
+	env.port = config.get('minee', 'port')
 
 def vagrant():
     """
@@ -317,7 +331,7 @@ def configure_openvpn_client(zip_path=None):
         dirname = run("dirname `find . -name 'cert.crt' | head -n1`")
         sudo("cp %(dn)s/key.key %(dn)s/ca.crt %(dn)s/ta.key %(dn)s/cert.crt /etc/openvpn/" % {'dn': dirname})
         sudo("cp %(dn)s/config.ovpn /etc/openvpn/client.conf" % {'dn': dirname})
-    
+
     sudo('service openvpn restart')
     run('rm -fR /tmp/client.ovpn')
 
