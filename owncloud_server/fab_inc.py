@@ -10,9 +10,10 @@ def _oc_server_docker_vars():
     return {
         'image': 'adamw523/owncloud_server',
         'tag': 'latest',
-        'work_dir': '/home/deploy/docker/owncloud_server_work/',
+        'work_dir': '/home/%s/docker/owncloud_server_work/' % env.user,
+        'ids_dir': '/home/%s/docker/ids/' % env.user,
         'public_ssh_port': 8022,
-        'public_http_port': 8080
+        'public_https_port': 8443
     }
 
 def _private_oc_config():
@@ -48,14 +49,19 @@ def oc_build_self_signed_cert():
 # On Docker host
 #----------------------------
 
+def _require_server_dirs():
+    docker_vars = _oc_server_docker_vars()
+    work_dir = docker_vars['work_dir']
+    ids_dir = docker_vars['ids_dir']
+    fabtools.require.files.directories([work_dir, ids_dir])
+
 def oc_server_build():
     """
     Build the ownCloud Server image
     """
+    _require_server_dirs()
     docker_vars = _oc_server_docker_vars()
     work_dir = docker_vars['work_dir']
-
-    fabtools.require.files.directories([work_dir])
 
     # SSH configuration
     put('private/ssh/id_rsa_devbox.pub', work_dir + '/id_rsa.pub')
@@ -65,6 +71,8 @@ def oc_server_build():
 
     # Apache config
     put('owncloud_server/configs/001-owncloud.conf', work_dir)
+    put('private/owncloud/server.crt', work_dir)
+    put('private/owncloud/server.key', work_dir)
 
     # Dockerfile
     put('owncloud_server/Dockerfile', work_dir)
@@ -72,39 +80,43 @@ def oc_server_build():
     # build
     with cd(work_dir):
         # <username / private repo address>/repo_name>:tag
-        
         run('docker build -t %(image)s .' % docker_vars)
 
 def oc_server_run():
     """
     Run the ownCloud Server docker container from the image
     """
+    _require_server_dirs()
     docker_vars = _oc_server_docker_vars()
 
     # allow SSH traffic to container
     sudo('ufw allow %(public_ssh_port)s' % docker_vars)
 
     # run the container
-    run_cmd = 'docker run -d -p %(public_ssh_port)s:22 -p %(public_http_port)s:80 %(image)s ' % docker_vars
-    run('ID=$(%s) && echo $ID > /home/deploy/docker/ids/owncloud_container' % run_cmd)
+    run_cmd = 'docker run -d -p %(public_ssh_port)s:22 -p %(public_https_port)s:443 %(image)s ' % docker_vars
+    run('ID=$(%s) && echo $ID > /home/%s/docker/ids/owncloud_container' %
+            (run_cmd, env.user))
 
 def oc_server_start():
     """
     Start the previously run ownCloud Server docker container
     """
-    docker_vars = _oc_serer_docker_vars()
+    _require_server_dirs()
+    docker_vars = _oc_server_docker_vars()
 
     # start the container
-    run('docker start `cat /home/deploy/docker/ids/owncloud_server_container`')
+    run('docker start `cat /home/%s/docker/ids/owncloud_server_container`' %
+            env.user)
 
 def oc_server_stop():
     """
     Stop the ownCloud Server docker container
     """
+    _require_server_dirs()
     docker_vars = _oc_server_docker_vars()
 
     # kill the container
-    run('docker stop `cat /home/deploy/docker/ids/owncloud_container`')
+    run('docker stop `cat /home/%s/docker/ids/owncloud_container`' % env.user)
 
 def oc_server():
     """

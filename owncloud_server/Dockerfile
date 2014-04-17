@@ -22,11 +22,16 @@ RUN apt-get install -y apache2 php5 php5-gd php-xml-parser php5-intl php5-sqlite
 # TODO: check if installed: php5-fileinfo
 # TODO: do we need php5-exif - not found
 
-RUN wget -O - http://download.owncloud.org/community/owncloud-6.0.1.tar.bz2 | tar jx -C /var/www/
+RUN wget -O - http://download.owncloud.org/community/owncloud-6.0.2.tar.bz2 | tar jx -C /var/www/
 RUN chown -R www-data:www-data /var/www/owncloud
 
 ADD ./001-owncloud.conf /etc/apache2/sites-available/
+ADD ./server.crt /etc/ssl/certs/ssl-cert-snakeoil.pem
+ADD ./server.key /etc/ssl/private/ssl-cert-snakeoil.key
+
 RUN ln -s /etc/apache2/sites-available/001-owncloud.conf /etc/apache2/sites-enabled/
 RUN a2enmod rewrite
+RUN a2enmod ssl
+RUN a2ensite default-ssl
 
 CMD ["/usr/bin/supervisord"]
