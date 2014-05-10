@@ -13,6 +13,7 @@ import fabtools
 from aerofs.fab_inc import *
 from openvpn.fab_inc import *
 from owncloud_server.fab_inc import *
+from seafile_server.fab_inc import *
 
 import ConfigParser
 import os.path
@@ -43,9 +44,23 @@ def dodo():
 	env.hosts = [config.get('dodo', 'host')]
 	env.user = config.get('dodo', 'user')
 
-def minee():
+def minee_base():
+    """
+    Select minee environment
+    """
+
+    # get config file
+    config = ConfigParser.ConfigParser()
+    config.read(['private/minee.cfg'])
+
+    # set values from config
+    env.hosts = [config.get('minee_base', 'host')]
+    env.user = config.get('minee_base', 'user')
+    env.port = config.get('minee_base', 'port')
+
+def minee_docker():
 	"""
-	Select minee environment
+	Select minee docker host environment
 	"""
 
 	# get config file
@@ -53,9 +68,9 @@ def minee():
 	config.read(['private/minee.cfg'])
 
 	# set values from config
-	env.hosts = [config.get('minee', 'host')]
-	env.user = config.get('minee', 'user')
-	env.port = config.get('minee', 'port')
+	env.hosts = [config.get('dockerhost', 'host')]
+	env.user = config.get('dockerhost', 'user')
+	env.port = config.get('dockerhost', 'port')
 
 def vagrant():
     """
