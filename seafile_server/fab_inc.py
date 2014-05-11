@@ -69,11 +69,6 @@ def sf_server_build():
     # Supervisor
     put('seafile_server/supervisord.conf', work_dir)
 
-    # Apache config
-    #put('seafile_server/configs/001-seafile.conf', work_dir)
-    #put('private/seafile/server.crt', work_dir)
-    #put('private/seafile/server.key', work_dir)
-
     # Dockerfile
     put('seafile_server/Dockerfile', work_dir)
 
@@ -118,11 +113,11 @@ def sf_server_stop():
     # kill the container
     run('docker stop `cat /home/%s/docker/ids/seafile_server_container`' % env.user)
 
-def oc_server():
+def sf_server():
     """
     Set the environment to the Seafile Server container
     """
-    docker_vars = _oc_server_docker_vars()
+    docker_vars = _sf_server_docker_vars()
 
     env.user = 'root'
     env.port = docker_vars['public_ssh_port']
