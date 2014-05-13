@@ -13,7 +13,12 @@ def _sf_server_docker_vars():
         'work_dir': '/home/%s/docker/seafile_server_work/' % env.user,
         'ids_dir': '/home/%s/docker/ids/' % env.user,
         'public_ssh_port': 8022,
-        'public_https_port': 8443
+        'public_http_port': 8082,
+        'public_ccnet_port': 10001,
+        'public_data_port': 12001,
+        'public_https_port': 8443,
+        'seafile_version': '3.0.3',
+        'seafile_arch': 'x86-64'
     }
 
 def _private_sf_config():
@@ -44,6 +49,13 @@ def sf_build_self_signed_cert():
 # Inside Seafile Server container
 #----------------------------
 
+def sf_configure():
+    """Starts the configuration of Seafile. Run through this step manually"""
+
+    docker_vars = _sf_server_docker_vars()
+    with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
+        run('./setup-seafile.sh')
+
 
 #----------------------------
 # On Docker host
@@ -70,7 +82,7 @@ def sf_server_build():
     put('seafile_server/supervisord.conf', work_dir)
 
     # Dockerfile
-    put('seafile_server/Dockerfile', work_dir)
+    upload_template('seafile_server/Dockerfile', work_dir + '/', docker_vars)
 
     # build
     with cd(work_dir):
@@ -84,11 +96,15 @@ def sf_server_run():
     _require_server_dirs()
     docker_vars = _sf_server_docker_vars()
 
-    # allow SSH traffic to container
-    sudo('ufw allow %(public_ssh_port)s' % docker_vars)
-
     # run the container
-    run_cmd = 'docker run -i -d -p %(public_ssh_port)s:22 -p %(public_https_port)s:443 %(image)s ' % docker_vars
+    port_options = ['-p %(public_ssh_port)s:22 ' % docker_vars,
+                '-p %(public_http_port)s:8082 ' % docker_vars,
+                '-p %(public_ccnet_port)s:10001 ' % docker_vars,
+                '-p %(public_data_port)s:12001 ' % docker_vars
+            ]
+
+    port_options_str = ' '.join(port_options)
+    run_cmd = 'docker run -i -d ' + port_options_str + ' %(image)s ' % docker_vars
     run('ID=$(%s) && echo $ID > /home/%s/docker/ids/seafile_server_container' %
             (run_cmd, env.user))
 
