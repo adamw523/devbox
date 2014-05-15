@@ -16,7 +16,7 @@ RUN mkdir -p /var/log/supervisor
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Seafile
-RUN apt-get install -qy python2.7 python-setuptools python-simplejson python-imaging sqlite3
+RUN apt-get install -qy python2.7 python-setuptools python-simplejson python-imaging sqlite3 rsync
 EXPOSE 8082
 EXPOSE 10001
 EXPOSE 12001
