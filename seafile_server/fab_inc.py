@@ -114,6 +114,8 @@ def sf_server_restore():
 
 def sf_download_backup():
     """Downlaod a tgz file with the contents of /backup"""
+    run('tar -czf /backup.tgz /backup')
+    get('/backup.tgz', 'backups/')
 
 
 def _latest_file(prefix):
