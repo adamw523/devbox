@@ -7,6 +7,7 @@ from datetime import datetime
 from fabric.api import abort, env, get, local, prompt, put, run, sudo
 from fabric.context_managers import cd, remote_tunnel
 from fabric.contrib.files import append, exists, sed, upload_template
+from fabric.contrib.console import confirm
 
 def _sf_server_docker_vars():
     return {
@@ -117,9 +118,28 @@ def sf_download_backup():
     run('tar -czf /backup.tgz /backup')
     get('/backup.tgz', 'backups/')
 
+def sf_backup_to_s3():
+    """Sync backup to S3"""
+    private_config = _private_sf_config()
+    print private_config.get('seafile', 'backup_bucket')
+    cmd = "boto-rsync -a\"%(s3_access_key)s\" -s\"%(s3_secret_key)s\" --delete /backup s3://%(backup_bucket)s/seafile_server"
+    cmd = cmd % dict(private_config.items('seafile'))
+    run(cmd)
 
-def _latest_file(prefix):
-    files = (run('ls -1 %s' % prefix, quiet=True)).splitlines()
+def sf_get_backup_from_s3():
+    """Get backup from S3"""
+    private_config = _private_sf_config()
+
+    if exists('/backup') and not confirm('Overwrite existing /backup directory?', default=False):
+        return
+
+    cmd = "boto-rsync -a\"%(s3_access_key)s\" -s\"%(s3_secret_key)s\" --delete s3://%(backup_bucket)s/seafile_server /backup"
+    cmd = cmd % dict(private_config.items('seafile'))
+    run(cmd)
+
+def _latest_file(search):
+    """Returns newest file matching given search path"""
+    files = (run('ls -1 %s' % search, quiet=True)).splitlines()
     date_strs = [file_[file_.rfind('.')+1:] for file_ in files]
     dates = [datetime.strptime(date_str, '%Y-%m-%d-%H-%M-%S') for date_str in date_strs]
     max_index = dates.index(max(dates))
