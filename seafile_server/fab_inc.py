@@ -70,11 +70,17 @@ def sf_start():
 
 def sf_stop():
     """Stop Seafile Server"""
-
     docker_vars = _sf_server_docker_vars()
-    with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
-        run('./seafile.sh stop')
-        run('./seahub.sh stop')
+
+    # check if seafile is running
+    running = False
+    if(run('pgrep seafile', warn_only=True)):
+        running = True
+
+    if running:
+        with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
+            run('./seafile.sh stop')
+            run('./seahub.sh stop')
 
 def sf_server_backup():
     """Create a backup on Seafile server"""
@@ -92,24 +98,42 @@ def sf_server_backup():
 
     sf_start()
 
+def _make_old_copy(files):
+    """"Copy given file or file paths with .old extension"""
+    if type(files) == 'str':
+        files = [files]
+
+    for file_ in files:
+        if(exists(file_)):
+            run('mv %(file)s %(file)s.old' % {'file': file_})
+
 def sf_server_restore():
     """Restore seafile from latest backup in /backup/"""
+    docker_vars = _sf_server_docker_vars()
+
     sf_stop()
 
     fabtools.require.files.directories(['/backup/data', '/backup/databases'])
+
+    # restore library data
+    run('rsync -az /backup/data/seafile/* /seafile/')
+
+    # fix permissions / executable flags
+    with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
+        run('chmod +x *.sh')
+        with cd('seafile/bin'):
+            run('chmod +x *')
+
     # restore databases
     with cd('/seafile'):
-        run('mv ccnet/PeerMgr/usermgr.db ccnet/PeerMgr/usermgr.db.old')
-        run('mv ccnet/GroupMgr/groupmgr.db ccnet/GroupMgr/groupmgr.db.old')
-        run('mv seafile-data/seafile.db seafile-data/seafile.db.old')
-        run('mv seahub.db seahub.db.old')
+        _make_old_copy(['ccnet/PeerMgr/usermgr.db', 'ccnet/GroupMgr/groupmgr.db',
+                        'seafile-data/seafile.db', 'seahub.db'])
 
         run('sqlite3 ccnet/PeerMgr/usermgr.db < %s' % _latest_file('/backup/databases/usermgr.db.bak*'))
         run('sqlite3 ccnet/GroupMgr/groupmgr.db < %s' % _latest_file('/backup/databases/groupmgr.db.bak*'))
         run('sqlite3 seafile-data/seafile.db < %s' % _latest_file('/backup/databases/seafile.db.bak*'))
         run('sqlite3 seahub.db < %s ' % _latest_file('/backup/databases/seahub.db.bak*'))
 
-    # restore library data
 
     sf_start()
 
