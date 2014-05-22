@@ -17,7 +17,7 @@ def _sf_server_docker_vars():
         'ids_dir': '/home/%s/docker/ids/' % env.user,
         'public_ssh_port': 8022,
         'public_http_port': 8000,
-        'public_seafile_http_port': 8082,
+        'public_seafile_https_port': 8443,
         'public_ccnet_port': 10001,
         'public_data_port': 12001,
         'public_https_port': 8443,
@@ -34,20 +34,6 @@ def _private_sf_config():
 #----------------------------
 # Local commands
 #----------------------------
-
-def sf_build_self_signed_cert():
-    config_vars = _private_oc_config()
-    local("mkdir -p private/seafile")
-    local("openssl genrsa -des3 -passout pass:x -out private/seafile/server.pass.key 2048")
-    local("openssl rsa -passin pass:x -in private/seafile/server.pass.key -out private/seafile/server.key")
-    local("rm private/seafile/server.pass.key")
-    # Create the CSR
-    subj = "\"/C=%(country)s/ST=%(state)s/L=%(locality)s/O=%(org_name)s/CN=%(server_address)s\"" % dict(config_vars.items('seafile'))
-    local("openssl req -new -key private/seafile/server.key -out private/seafile/server.csr -subj %(subj)s" % {'subj': subj})
-
-    # Sign the CSR
-    local("openssl x509 -req -days 365 -in private/seafile/server.csr -signkey private/seafile/server.key -out private/seafile/server.crt")
-
 
 #----------------------------
 # Inside Seafile Server container
@@ -211,7 +197,7 @@ def sf_server_run():
     # run the container
     port_options = ['-p %(public_ssh_port)s:22 ' % docker_vars,
                 '-p %(public_http_port)s:8000 ' % docker_vars,
-                '-p %(public_seafile_http_port)s:8082 ' % docker_vars,
+                '-p %(public_seafile_https_port)s:8443 ' % docker_vars,
                 '-p %(public_ccnet_port)s:10001 ' % docker_vars,
                 '-p %(public_data_port)s:12001 ' % docker_vars
             ]

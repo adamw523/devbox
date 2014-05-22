@@ -25,4 +25,9 @@ RUN mkdir -p /seafile/downloads
 RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafile-server_%(seafile_version)s_%(seafile_arch)s.tar.gz
 RUN cd /seafile && tar -xzf downloads/seafile-ser*
 
+# Nginx
+EXPOSE 8443
+RUN apt-get -qy install nginx
+
+
 CMD ["/usr/bin/supervisord"]
