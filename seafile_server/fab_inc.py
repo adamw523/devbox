@@ -8,6 +8,7 @@ from fabric.api import abort, env, get, local, prompt, put, run, sudo
 from fabric.context_managers import cd, remote_tunnel
 from fabric.contrib.files import append, exists, sed, upload_template
 from fabric.contrib.console import confirm
+from seafile_ssl_proxy.fab_inc import _sf_ssl_proxy_private_config
 
 def _sf_server_docker_vars():
     return {
@@ -52,7 +53,7 @@ def sf_start():
     docker_vars = _sf_server_docker_vars()
     with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
         run('./seafile.sh start')
-        run('./seahub.sh start')
+        run('./seahub.sh start-fastcgi')
 
 def sf_stop():
     """Stop Seafile Server"""
@@ -109,6 +110,9 @@ def sf_server_restore():
         run('chmod +x *.sh')
         with cd('seafile/bin'):
             run('chmod +x *')
+
+    # add latest link
+    run('ln -s /seafile/seafile-server%(seafile_version)s /seafile/seafile-server-latest' % docker_vars)
 
     # restore databases
     with cd('/seafile'):
@@ -171,7 +175,14 @@ def sf_server_build():
     """
     _require_server_dirs()
     docker_vars = _sf_server_docker_vars()
+    config_vars = _sf_ssl_proxy_private_config()
+    config_vars_dict = dict(config_vars.items('seafile'))
     work_dir = docker_vars['work_dir']
+
+    # nginx/ssl configuration
+    upload_template('private/seafile_ssl_proxy/default.conf', work_dir, config_vars_dict)
+    put('private/seafile_ssl_proxy/server.key', work_dir)
+    put('private/seafile_ssl_proxy/server.crt', work_dir)
 
     # SSH configuration
     put('private/ssh/id_rsa_devbox.pub', work_dir + '/id_rsa.pub')
@@ -197,6 +208,7 @@ def sf_server_run():
     # run the container
     port_options = ['-p %(public_ssh_port)s:22 ' % docker_vars,
                 '-p %(public_http_port)s:8000 ' % docker_vars,
+                '-p %(public_https_port)s:8443 ' % docker_vars,
                 '-p %(public_seafile_https_port)s:8443 ' % docker_vars,
                 '-p %(public_ccnet_port)s:10001 ' % docker_vars,
                 '-p %(public_data_port)s:12001 ' % docker_vars

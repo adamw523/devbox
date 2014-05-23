@@ -28,6 +28,8 @@ RUN cd /seafile && tar -xzf downloads/seafile-ser*
 # Nginx
 EXPOSE 8443
 RUN apt-get -qy install nginx
-
+ADD default.conf /etc/nginx/sites-available/default
+ADD server.key /etc/nginx/certs/server.key
+ADD server.crt /etc/nginx/certs/server.crt
 
 CMD ["/usr/bin/supervisord"]
