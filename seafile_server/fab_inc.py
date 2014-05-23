@@ -180,7 +180,7 @@ def sf_server_build():
     work_dir = docker_vars['work_dir']
 
     # nginx/ssl configuration
-    upload_template('private/seafile_ssl_proxy/default.conf', work_dir, config_vars_dict)
+    upload_template('seafile_ssl_proxy/nginx_default.conf', work_dir, config_vars_dict)
     put('private/seafile_ssl_proxy/server.key', work_dir)
     put('private/seafile_ssl_proxy/server.crt', work_dir)
 
