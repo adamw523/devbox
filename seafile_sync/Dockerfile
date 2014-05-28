@@ -18,7 +18,7 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Seafile
 RUN apt-get install -qy python2.7 python-setuptools python-simplejson python-imaging sqlite3 rsync python-pip
 RUN mkdir -p /seafile/downloads
-RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafile-server_%(seafile_version)s_%(seafile_arch)s.tar.gz
+RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafile-cli_%(seafile_version)s_%(seafile_arch)s.tar.gz
 RUN cd /seafile && tar -xzf downloads/seafile-ser*
 
 CMD ["/usr/bin/supervisord"]
