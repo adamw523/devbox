@@ -15,6 +15,7 @@ from openvpn.fab_inc import *
 from owncloud_server.fab_inc import *
 from seafile_server.fab_inc import *
 from seafile_ssl_proxy.fab_inc import *
+from seafile_sync.fab_inc import *
 
 import ConfigParser
 import os.path
