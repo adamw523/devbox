@@ -18,7 +18,6 @@ def _sf_server_docker_vars():
         'ids_dir': '/home/%s/docker/ids/' % env.user,
         'public_ssh_port': 8022,
         'public_http_port': 8000,
-        'public_seafile_https_port': 8443,
         'public_ccnet_port': 10001,
         'public_data_port': 12001,
         'public_https_port': 8443,
@@ -44,6 +43,8 @@ def sf_server_configure():
     """Start the configuration of Seafile. Run through this step manually"""
 
     docker_vars = _sf_server_docker_vars()
+
+    sf_stop()
     with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
         run('./setup-seafile.sh')
 
@@ -51,23 +52,13 @@ def sf_start():
     """Start Seafile Server"""
 
     docker_vars = _sf_server_docker_vars()
-    with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
-        run('./seafile.sh start')
-        run('./seahub.sh start-fastcgi')
+    run('supervisorctl start seafile')
 
 def sf_stop():
     """Stop Seafile Server"""
     docker_vars = _sf_server_docker_vars()
 
-    # check if seafile is running
-    running = False
-    if(run('pgrep seafile', warn_only=True)):
-        running = True
-
-    if running:
-        with cd('/seafile/seafile-server-%(seafile_version)s' % docker_vars):
-            run('./seafile.sh stop')
-            run('./seahub.sh stop')
+    run('supervisorctl stop seafile')
 
 def sf_server_backup():
     """Create a backup on Seafile server"""
@@ -130,7 +121,13 @@ def sf_server_restore():
 def sf_download_backup():
     """Downlaod a tgz file with the contents of /backup"""
     run('tar -czf /backup.tgz /backup')
-    get('/backup.tgz', 'backups/')
+    get('/backup.tgz', 'backups/seafile-backup.tgz')
+
+def sf_upload_backup():
+    """Uploadt the tgz backup file"""
+    put('backups/seafile-backup.tgz', '/backup.tgz')
+    with cd('/'):
+        run('tar -xzf backup.tgz')
 
 def sf_backup_to_s3():
     """Sync backup to S3"""
@@ -190,6 +187,9 @@ def sf_server_build():
     # Supervisor
     put('seafile_server/supervisord.conf', work_dir)
 
+    # Seafile
+    put('seafile_server/seafile_run.sh', work_dir)
+
     # Dockerfile
     upload_template('seafile_server/Dockerfile', work_dir + '/', docker_vars)
 
@@ -209,7 +209,6 @@ def sf_server_run():
     port_options = ['-p %(public_ssh_port)s:22 ' % docker_vars,
                 '-p %(public_http_port)s:8000 ' % docker_vars,
                 '-p %(public_https_port)s:8443 ' % docker_vars,
-                '-p %(public_seafile_https_port)s:8443 ' % docker_vars,
                 '-p %(public_ccnet_port)s:10001 ' % docker_vars,
                 '-p %(public_data_port)s:12001 ' % docker_vars
             ]

@@ -1,5 +1,5 @@
 FROM ubuntu:trusty
-RUN apt-get update -q
+RUN apt-get update -q --fix-missing
 RUN apt-get install -qy curl iputils-ping openssh-server supervisor
 
 # SSH
@@ -24,11 +24,13 @@ RUN pip install boto_rsync
 RUN mkdir -p /seafile/downloads
 RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafile-server_%(seafile_version)s_%(seafile_arch)s.tar.gz
 RUN cd /seafile && tar -xzf downloads/seafile-ser*
+ADD seafile_run.sh /root/seafile_run.sh
+RUN chmod +x /root/seafile_run.sh
 
 # Nginx
 EXPOSE 8443
 RUN apt-get -qy install nginx
-ADD default.conf /etc/nginx/sites-available/default
+ADD nginx_default.conf /etc/nginx/sites-available/default
 ADD server.key /etc/nginx/certs/server.key
 ADD server.crt /etc/nginx/certs/server.crt
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
