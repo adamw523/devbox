@@ -31,5 +31,6 @@ RUN apt-get -qy install nginx
 ADD default.conf /etc/nginx/sites-available/default
 ADD server.key /etc/nginx/certs/server.key
 ADD server.crt /etc/nginx/certs/server.crt
+RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 
 CMD ["/usr/bin/supervisord"]
