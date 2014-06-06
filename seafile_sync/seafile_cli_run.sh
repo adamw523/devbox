@@ -1,14 +1,15 @@
 #!/bin/bash
 STOP=0
+HOME=/root
 
 cd /seafile/seafile-cli-*
 
 start() {
   trap cue_stop SIGINT SIGTERM
 
-  if [ ! -d "%(sync_path)s" ]; then
+  if [ ! -d "/root/.ccnet" ]; then
     # initialize if not initialized
-    mkdir "%(sync_path)s"
+    ./seaf-cli init -d ~/.seafile-client
     ./seaf-cli start
     ./seaf-cli sync -l "%(sync_library_id)s" -s  "%(protocol)s://%(server)s:%(port)s" -d "%(sync_path)s" -u "%(username)s" -p "%(password)s"
   else

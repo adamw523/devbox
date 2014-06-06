@@ -16,13 +16,15 @@ RUN mkdir -p /var/log/supervisor
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Seafile
-RUN apt-get install -qy python2.7 python-simplejson python-imaging sqlite3 rsync python-pip
+RUN apt-get install -qy python2.7 python-simplejson python-pip
 RUN mkdir -p /seafile/downloads
 RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafile-cli_%(seafile_version)s_%(seafile_arch)s.tar.gz
 RUN cd /seafile && tar -xzf downloads/seafile-cli*
 RUN mkdir /root/.seafile-client
-RUN cd /seafile/seafile-cli-3.0.3/ && ./seaf-cli init -d /root/.seafile-client
 ADD seafile_cli_run.sh /root/seafile_cli_run.sh
 RUN chmod +x /root/seafile_cli_run.sh
+
+# Sync
+VOLUME %(sync_path)s
 
 CMD ["/usr/bin/supervisord"]

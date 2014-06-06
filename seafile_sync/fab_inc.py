@@ -62,7 +62,8 @@ def sf_sync_build():
     put('seafile_sync/supervisord.conf', work_dir)
 
     # Dockerfile
-    upload_template('seafile_sync/Dockerfile', work_dir, docker_vars)
+    upload_template('seafile_sync/Dockerfile', work_dir,
+            dict(docker_vars.items() + config_vars_dict.items()))
     upload_template('seafile_sync/seafile_cli_run.sh', work_dir, config_vars_dict)
 
     # build
