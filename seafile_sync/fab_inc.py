@@ -77,13 +77,19 @@ def sf_sync_run():
     """
     _require_sf_sync_dirs()
     docker_vars = _sf_sync_docker_vars()
+    id_path = '/home/%s/docker/ids/seafile_sync_container' % (env.user)
+
+    # remove old container if exists
+    if exists(id_path):
+        run('docker rm `cat %s`' % (id_path))
 
     # run the container
-    port_options = ['-p %(public_ssh_port)s:22 ' % docker_vars
-            ]
-
+    port_options = ['-p %(public_ssh_port)s:22 ' % docker_vars]
     port_options_str = ' '.join(port_options)
-    run_cmd = 'docker run -i -d ' + port_options_str + ' %(image)s ' % docker_vars
+
+    run_cmd = 'docker run -i -d --name devshare_host '
+    run_cmd = run_cmd + port_options_str + ' %(image)s '
+    run_cmd = run_cmd % docker_vars
     run('ID=$(%s) && echo $ID > /home/%s/docker/ids/seafile_sync_container' %
             (run_cmd, env.user))
 
