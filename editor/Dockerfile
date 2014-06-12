@@ -15,5 +15,6 @@ EXPOSE 8022
 RUN mkdir -p /var/log/supervisor
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+USER adam
 
 CMD ["/usr/bin/supervisord"]

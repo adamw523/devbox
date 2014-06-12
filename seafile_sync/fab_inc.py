@@ -65,6 +65,7 @@ def sf_sync_build():
     upload_template('seafile_sync/Dockerfile', work_dir,
             dict(docker_vars.items() + config_vars_dict.items()))
     upload_template('seafile_sync/seafile_cli_run.sh', work_dir, config_vars_dict)
+    upload_template('seafile_sync/fix_permissions.sh', work_dir, config_vars_dict)
 
     # build
     with cd(work_dir):

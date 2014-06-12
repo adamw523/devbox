@@ -1,6 +1,6 @@
 FROM ubuntu:trusty
-RUN apt-get install -qy curl iputils-ping openssh-server supervisor
 RUN apt-get update -q --fix-missing
+RUN apt-get install -qy curl iputils-ping openssh-server supervisor
 
 # SSH
 RUN mkdir -p /var/run/sshd
@@ -26,13 +26,15 @@ RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafi
 RUN cd /seafile && tar -xzf downloads/seafile-cli*
 RUN mkdir /home/adam/.seafile-client
 ADD seafile_cli_run.sh /home/adam/seafile_cli_run.sh
+ADD fix_permissions.sh /root/fix_permissions.sh
 USER root
 RUN chmod +x /home/adam/seafile_cli_run.sh
+RUN chmod +x /root/fix_permissions.sh
 RUN chown adam:adam /home/adam/seafile_cli_run.sh
 
 # Sync
+USER root
 VOLUME %(sync_path)s
-RUN mkdir %(sync_path)s
-RUN chown adam:adam %(sync_path)s
 
 CMD ["/usr/bin/supervisord"]
+# CMD ["/bin/sh", "-c", "while true; do echo hello world; sleep 1; done"]
