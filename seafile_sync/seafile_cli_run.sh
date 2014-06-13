@@ -1,13 +1,13 @@
 #!/bin/bash
 STOP=0
-HOME=/home/adam
+HOME=/home/%(user)s
 
 cd /seafile/seafile-cli-*
 
 start() {
   trap cue_stop SIGINT SIGTERM
 
-  if [ ! -d "/home/adam/.ccnet" ]; then
+  if [ ! -d "/home/%(user)s/.ccnet" ]; then
     # initialize if not initialized
     ./seaf-cli init -d ~/.seafile-client
     ./seaf-cli start

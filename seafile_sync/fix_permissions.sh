@@ -1,3 +1,3 @@
 #!/bin/bash
 
-chown -R adam:adam /devshare
+chown -R %(user)s:%(user)s /devshare

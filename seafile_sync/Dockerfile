@@ -16,21 +16,21 @@ RUN mkdir -p /var/log/supervisor
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Seafile
-RUN useradd -m adam
+RUN useradd -m %(user)s
 RUN apt-get install -qy python2.7 python-simplejson python-pip
 RUN mkdir -p /seafile/downloads
-RUN chown -R adam:adam /seafile
+RUN chown -R %(user)s:%(user)s /seafile
 
-USER adam
+USER %(user)s
 RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafile-cli_%(seafile_version)s_%(seafile_arch)s.tar.gz
 RUN cd /seafile && tar -xzf downloads/seafile-cli*
-RUN mkdir /home/adam/.seafile-client
-ADD seafile_cli_run.sh /home/adam/seafile_cli_run.sh
+RUN mkdir /home/%(user)s/.seafile-client
+ADD seafile_cli_run.sh /home/%(user)s/seafile_cli_run.sh
 ADD fix_permissions.sh /root/fix_permissions.sh
 USER root
-RUN chmod +x /home/adam/seafile_cli_run.sh
+RUN chmod +x /home/%(user)s/seafile_cli_run.sh
 RUN chmod +x /root/fix_permissions.sh
-RUN chown adam:adam /home/adam/seafile_cli_run.sh
+RUN chown %(user)s:%(user)s /home/%(user)s/seafile_cli_run.sh
 
 # Sync
 USER root

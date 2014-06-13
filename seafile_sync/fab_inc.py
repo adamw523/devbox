@@ -54,16 +54,16 @@ def sf_sync_build():
     config_vars = _private_sf_sync_config()
     config_vars_dict = dict(config_vars.items('seafile'))
     work_dir = docker_vars['work_dir']
+    template_vars = dict(docker_vars.items() + config_vars_dict.items())
 
     # SSH configuration
     put('private/ssh/id_rsa_devbox.pub', work_dir + '/id_rsa.pub')
 
     # Supervisor
-    put('seafile_sync/supervisord.conf', work_dir)
+    upload_template('seafile_sync/supervisord.conf', work_dir, template_vars)
 
     # Dockerfile
-    upload_template('seafile_sync/Dockerfile', work_dir,
-            dict(docker_vars.items() + config_vars_dict.items()))
+    upload_template('seafile_sync/Dockerfile', work_dir, template_vars)
     upload_template('seafile_sync/seafile_cli_run.sh', work_dir, config_vars_dict)
     upload_template('seafile_sync/fix_permissions.sh', work_dir, config_vars_dict)
 
