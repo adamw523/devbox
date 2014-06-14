@@ -15,6 +15,15 @@ EXPOSE 8022
 RUN mkdir -p /var/log/supervisor
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-USER adam
+# Users SSH
+RUN useradd -m %(user)s -s /bin/bash
+ADD authorized_keys /tmp/home/%(user)s/.ssh/authorized_keys
+RUN chmod 700 /tmp/home/%(user)s/.ssh
+RUN chmod 600 /tmp/home/%(user)s/.ssh/*
+RUN chown -R adam:adam /tmp/home/%(user)s
+# below is a weird hack that prevents 'permission denied' errors
+RUN shopt -s dotglob; mv /tmp/home/%(user)s/* /home/%(user)s/ 
+
+# vim
 
 CMD ["/usr/bin/supervisord"]
