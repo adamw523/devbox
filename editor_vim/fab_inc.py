@@ -15,7 +15,7 @@ def _editor_vim_docker_vars():
         'tag': 'latest',
         'work_dir': '/home/%s/docker/editor_vim_work/' % env.user,
         'ids_dir': '/home/%s/docker/ids/' % env.user,
-        'public_ssh_port': 8025
+        'public_ssh_port': 8026
     }
 
 def _private_editor_vim_config():
@@ -62,6 +62,11 @@ def editor_vim_build():
 
     # Dockerfile
     upload_template('editor_vim/Dockerfile', work_dir, template_vars)
+
+    # Editor files
+    put('editor_vim/vimrc.after', work_dir)
+    put('editor_vim/tmux.conf', work_dir)
+    put('editor_vim/01apt-cacher', work_dir)
 
     # build
     with cd(work_dir):
