@@ -62,11 +62,9 @@ def local_proxy_run():
     docker_vars = _local_proxy_docker_vars()
 
     # run the container
-    port_options = ['-p 3128:3128 ' % docker_vars]
-    port_options_str = ' '.join(port_options)
-
     run_cmd = 'docker run -i -d '
-    run_cmd = run_cmd + port_options_str + ' %(image)s '
+    run_cmd = run_cmd + '-p 3128:3128 '
+    run_cmd = run_cmd + ' %(image)s '
     run_cmd = run_cmd % docker_vars
 
     run('ID=$(%s) && echo $ID > /home/%s/docker/ids/local_proxy_container' %
