@@ -11,6 +11,7 @@ from fabtools import require
 import fabtools
 
 from aerofs.fab_inc import *
+from editor_cloud9.fab_inc import *
 from editor_vim.fab_inc import *
 from local_proxy.fab_inc import *
 from openvpn.fab_inc import *
