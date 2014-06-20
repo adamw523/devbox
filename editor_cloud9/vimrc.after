@@ -1,0 +1,23 @@
+color desert
+
+let mapleader = ","
+
+" Don't wrap lines by default
+set nowrap
+
+" NERDTree
+map <Leader>n :NERDTreeToggle<CR>
+
+" switch buffers without saving
+:set hidden
+
+" " BufferGator
+map <Leader>b :BuffergatorToggle<CR>
+
+" CtrlP configuration
+map <C-j> :CtrlP<CR>
+map <C-k> :CtrlPBuffer<CR>
+let g:ctrlp_working_path_mode = 0
+
+colorscheme desert256
+set background=light

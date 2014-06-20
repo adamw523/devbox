@@ -415,7 +415,7 @@ def lock_down_firewall():
     """
     Install Uncomplicated Firewall and lock down everything except for SSH
     """
-    fabtools.require.deb.packages(['ufw']) 
+    fabtools.require.deb.packages(['ufw'])
     sudo('ufw default deny')
     sudo('ufw enable')
     sudo('ufw allow ssh')
