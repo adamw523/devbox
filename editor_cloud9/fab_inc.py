@@ -57,6 +57,8 @@ def editor_cloud9_build():
 
     # Dockerfile
     upload_template('editor_cloud9/Dockerfile', work_dir, template_vars)
+    upload_template('editor_cloud9/my_init.sh', work_dir, template_vars)
+    upload_template('editor_cloud9/run_cloud9.sh', work_dir, template_vars)
 
     # build
     with cd(work_dir):
@@ -77,7 +79,7 @@ def editor_cloud9_run():
     port_options_str = ' '.join(port_options)
 
     run_cmd = 'docker run -i -d --volumes-from devshare_host '
-    run_cmd = run_cmd + port_options_str + ' %(image)s '
+    run_cmd = run_cmd + port_options_str + ' -t %(image)s '
     run_cmd = run_cmd % docker_vars
 
     run('ID=$(%s) && echo $ID > /home/%s/docker/ids/editor_cloud9_container' %
