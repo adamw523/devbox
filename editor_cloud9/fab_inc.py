@@ -79,7 +79,8 @@ def editor_cloud9_run():
     port_options_str = ' '.join(port_options)
 
     run_cmd = 'docker run -i -d --volumes-from devshare_host '
-    run_cmd = run_cmd + port_options_str + ' -t %(image)s '
+    run_cmd = run_cmd + ' -v /etc/localtime:/etc/localtime:ro '
+    run_cmd = run_cmd + port_options_str + ' %(image)s '
     run_cmd = run_cmd % docker_vars
 
     run('ID=$(%s) && echo $ID > /home/%s/docker/ids/editor_cloud9_container' %

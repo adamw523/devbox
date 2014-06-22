@@ -28,7 +28,7 @@ RUN . /home/%(user)s/my_init.sh; \
 RUN . /home/%(user)s/my_init.sh; \
     . /home/%(user)s/.nvm/nvm.sh; \
     NVM_DIR=~/.nvm; \
-    nvm install v0.8
+    nvm install 0.6
 
 # install cloud9
 RUN export http_proxy=%(proxy_url)s; \
@@ -36,7 +36,8 @@ RUN export http_proxy=%(proxy_url)s; \
     cd $HOME; \
     mkdir .git; \
     git config --add http.proxy $http_proxy; \
-    git clone http://github.com/ajaxorg/cloud9.git; \
+    curl -O http://adamw523.s3.amazonaws.com/devbox/cloud9-0.7.0.tgz; \
+    tar xzf cloud9-0.7.0.tgz; \
     cd cloud9; \
     npm install
 
