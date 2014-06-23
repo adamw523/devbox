@@ -93,61 +93,6 @@ def vagrant():
     _set_vagrant_env()
 
 #---------------------------
-# Cloud9 IDE
-#---------------------------
-
-def _work_dir():
-    if not exists('~/work'):
-        run('mkdir ~/work')
-
-def _scripts_dir():
-    if not exists('~/scripts'):
-        run('mkdir ~/scripts')
-
-def c9_install():
-    """
-    Insatll Could9 IDE and dependencies
-    """
-    print(_green("Cloud9 IDE"))
-    install_devtools()
-    nodejs_install()
-    fabtools.require.deb.packages(['npm', 'libxml2', 'libxml2-dev'])
-    sudo('npm install -g sm')
-    sudo('npm install qs mime formidable q n-util wrench detective')
-    _work_dir()
-    with cd('~/work'):
-        if not exists('cloud9'):
-            run('git clone https://github.com/ajaxorg/cloud9.git cloud9')
-        with cd('cloud9'):
-            run('git checkout v2.0.93')
-            sudo('sm install')
-
-def c9_start():
-    _scripts_dir()
-    put('scripts/run_cloud9.sh', '~/scripts/run_cloud9.sh')
-    with cd('~/work/cloud9'):
-        run('sh ~/scripts/run_cloud9.sh')
-
-def c9_kill():
-    with cd('~/work/cloud9'):
-        run('killall node')
-
-def nodejs_install():
-    """
-    Install nodejs
-    """
-    with settings(warn_only=True):
-        if not run('which node'):
-            with cd('/tmp'):
-                if not exists('node'):
-                    sudo('git clone https://github.com/joyent/node.git')
-                with cd('node'):
-                    sudo('git checkout v0.8.18') #Try checking nodejs.org for what the stable version is
-                    sudo('./configure')
-                    sudo('make')
-                    sudo('make install')
-
-#---------------------------
 # Yeoman
 #---------------------------
 def yeoman_install():
