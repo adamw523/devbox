@@ -226,23 +226,6 @@ def bundler_install():
     sudo('gem install bundler')
 
 #---------------------------
-# VIM
-#---------------------------
-def vim_copy_config():
-    put('configs/vimrc.after', '/home/%s/.vimrc.after' % env.user)
-
-def vim_janus_install():
-    fabtools.require.deb.packages(['rake', 'git', 'curl', 'ctags', 'vim'])
-    run('curl -Lo- https://bit.ly/janus-bootstrap | bash')
-    vim_copy_config()
-
-#---------------------------
-# tmux
-#---------------------------
-def tmux_copy_config():
-    put('configs/tmux.conf', '/home/%s/.tmux.conf' % env.user)
-
-#---------------------------
 # AWS
 #---------------------------
 def aws_install_boto():
