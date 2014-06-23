@@ -28,7 +28,7 @@ RUN . /home/%(user)s/my_init.sh; \
 RUN . /home/%(user)s/my_init.sh; \
     . /home/%(user)s/.nvm/nvm.sh; \
     NVM_DIR=~/.nvm; \
-    nvm install 0.6
+    nvm install v0.6
 
 # install cloud9
 RUN export http_proxy=%(proxy_url)s; \
