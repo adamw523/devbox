@@ -26,12 +26,6 @@ import sys
 
 env.project_name = 'devbox'
 
-def _set_vagrant_env():
-	pass
-
-def _runbg(cmd, sockname="dtach"):
-    return run('dtach -n `mktemp -u /tmp/%s.XXXX` %s'  % (sockname,cmd))
-
 #---------------------------
 # Environemnts
 #---------------------------
