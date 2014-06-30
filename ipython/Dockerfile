@@ -18,6 +18,11 @@ RUN chmod 600 /root/.ssh/authorized_keys
 RUN chown -R root:root /root/.ssh
 RUN sed -i -e "s/session\s*required\s*pam_loginuid.so/#session required pam_loginuid.so/" /etc/pam.d/sshd
 
+# Supervisor
+RUN apt-get install -qy curl supervisor
+RUN mkdir -p /var/log/supervisor
+ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # add user
 RUN useradd -m %(user)s
 
@@ -50,17 +55,8 @@ RUN export http_proxy=%(proxy_url)s; \
 RUN export http_proxy=%(proxy_url)s; \
     /home/%(user)s/notebookenv/bin/pip install  \
     beautifulsoup4 tables nltk scikit-learn paramiko scikit-image \
-    nose nosecolor nose-watch argcomplete boto
-
-RUN export http_proxy=%(proxy_url)s; \
-    /home/%(user)s/notebookenv/bin/pip install  \
-    jinja2
+    nose nosecolor nose-watch argcomplete boto jinja2
 
 RUN chown %(user)s:%(user)s /home/%(user)s/*
-
-# Supervisor
-RUN apt-get install -qy curl supervisor
-RUN mkdir -p /var/log/supervisor
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 CMD ["/usr/bin/supervisord"]
