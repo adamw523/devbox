@@ -14,9 +14,9 @@ from aerofs.fab_inc import *
 from editor_cloud9.fab_inc import *
 from editor_vim.fab_inc import *
 from local_proxy.fab_inc import *
+from icecoder.fab_inc import *
 from ipython.fab_inc import *
 from openvpn.fab_inc import *
-from owncloud_server.fab_inc import *
 from seafile_server.fab_inc import *
 from seafile_ssl_proxy.fab_inc import *
 from seafile_sync.fab_inc import *
