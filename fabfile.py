@@ -118,59 +118,6 @@ def gmailbackup_install():
             print(_red('Already installed'))
 
 #---------------------------
-# IPython
-#---------------------------
-def ipython_install():
-    fabtools.require.deb.packages(['python-pip', 'python-dev', 'libncurses5', 'libncurses5-dev'])
-    sudo('pip install ipython virtualenv')
-
-def ipython_notebook_install():
-    ipython_install()
-
-    fabtools.require.deb.packages(['libatlas-base-dev', 'gfortran', 'python-scipy', 
-        'libfreetype6', 'libfreetype6-dev', 'libpng12-dev', 'python-opencv', 'pandoc',
-        'libgeos-dev', 'libjpeg-dev', 'libhdf5-dev'])
-
-    if not exists('notebookenv'):
-        run('virtualenv notebookenv')
-
-    # install iPython notebook requirements in our virtualenv
-    run('/home/%s/notebookenv/bin/pip install ipython tornado readline nose pexpect pyzmq pygments pytest mock' % env.user)
-    run('/home/%s/notebookenv/bin/pip install numpy' % env.user)
-    run('/home/%s/notebookenv/bin/pip install scipy matplotlib feedparser nose tdaemon' % env.user)
-    run('/home/%s/notebookenv/bin/pip install pysqlite PIL markdown requests numexpr cython' % env.user)
-    run('/home/%s/notebookenv/bin/pip install pandas networkx oauth2 beautifulsoup4 tables nltk' % env.user)
-    run('/home/%s/notebookenv/bin/pip install scikit-learn paramiko' % env.user)
-    run('/home/%s/notebookenv/bin/pip install scikit-image' % env.user)
-    run('/home/%s/notebookenv/bin/pip install nosecolor nose-watch argcomplete' % env.user)
-    run('/home/%s/notebookenv/bin/pip install boto' % env.user)
-
-    # link the OpenCV module into our virtualenv
-    if not exists('/home/%s/notebookenv/lib/python2.7/site-packages/cv2.so' % env.user):
-        run('ln -s /usr/lib/pyshared/python2.7/cv2.so /home/%s/notebookenv/lib/python2.7/site-packages/' % env.user)
-
-    # configuraiton for notbook server
-    if not exists('~/.ipython'):
-        run('mkdir ~/.ipython')
-    put('configs/profile_nbserver', '~/.ipython/')
-
-    # nbconvert
-    docutils = run('/home/%s/notebookenv/bin/pip freeze |grep docutils' % env.user, warn_only=True)
-    if not docutils:
-        with cd('/tmp'):
-            run('curl http://docutils.svn.sourceforge.net/viewvc/docutils/trunk/docutils/?view=tar > docutils.tgz')
-            run('/home/%s/notebookenv/bin/pip install docutils.tgz' % env.user)
-
-    run('mkdir -p ~/tools')
-    if not exists('~/tools/nbconvert'):
-        with cd('~/tools'):
-            run('git clone git@github.com:adamw523/nbconvert.git ~/tools/nbconvert')
-
-def ipython_notebook_run():
-    with cd('~/AeroFS/devshare/notebooks'):
-        _runbg('/home/%s/notebookenv/bin/ipython notebook --profile nbserver --pylab inline > output.log ' % env.user)
-
-#---------------------------
 # GIS libraries for Notebook
 #---------------------------
 def notebook_gis_install():
