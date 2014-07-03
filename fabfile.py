@@ -22,6 +22,7 @@ from seafile_ssl_proxy.fab_inc import *
 from seafile_sync.fab_inc import *
 
 import ConfigParser
+import json
 import os.path
 import sys
 
@@ -200,8 +201,23 @@ def docker_install():
     sed('/etc/default/ufw', 'DEFAULT_FORWARD_POLICY="DROP"', 'DEFAULT_FORWARD_POLICY="ACCEPT"', use_sudo=True)
     sudo('ufw reload')
 
-def docker_port_maps(container, port):
-    pass
+def docker_ports():
+    data = json.loads(run('docker ps -q | xargs docker inspect', quiet=True))
+    ports = data[0]['NetworkSettings']['Ports']
+
+    for host_data in data:
+        # print host_data
+        ports = host_data['NetworkSettings']['Ports']
+        print host_data['Config']['Hostname'], "-", host_data['Config']['Image']
+        for port in ports:
+            if ports[port]:
+                print "\t", ports[port][0]['HostPort'], '\t=>', port
+
+        print
+
+def docker_install_host_tools():
+    fabtools.require.deb.packages(['tmux'])
+    put('editor_vim/tmux.conf', '/home/%s/.tmux.conf' % (env.user))
 
 #---------------------------
 # OpenVPN Client
