@@ -208,7 +208,9 @@ def docker_ports():
     for host_data in data:
         # print host_data
         ports = host_data['NetworkSettings']['Ports']
-        print host_data['Config']['Hostname'], "-", host_data['Config']['Image']
+        print host_data['Config']['Hostname'], "-", \
+                host_data['NetworkSettings']['IPAddress'], "-", \
+                host_data['Config']['Image']
         for port in ports:
             if ports[port]:
                 print "\t", ports[port][0]['HostPort'], '\t=>', port
