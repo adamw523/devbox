@@ -85,6 +85,7 @@ def editor_vim_run():
     port_options_str = ' '.join(port_options)
 
     run_cmd = 'docker run -i -d --volumes-from devshare_host '
+    run_cmd = run_cmd + ' -h vim '
     run_cmd = run_cmd + port_options_str + ' %(image)s '
     run_cmd = run_cmd % docker_vars
 

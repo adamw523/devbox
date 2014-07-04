@@ -80,6 +80,11 @@ def ipython_run():
     """
     _require_ipython_dirs()
     docker_vars = _ipython_docker_vars()
+    id_path = '/home/%s/docker/ids/ipython_container' % (env.user)
+
+    # remove old container if exists
+    if exists(id_path):
+        run('docker rm `cat %s`' % (id_path))
 
     # run the container
     port_options = ['-p %(public_ssh_port)s:22 ' % docker_vars,
@@ -87,11 +92,13 @@ def ipython_run():
     port_options_str = ' '.join(port_options)
 
     run_cmd = 'docker run -i -d --volumes-from devshare_host '
+    run_cmd = run_cmd + ' --name ipython '
+    run_cmd = run_cmd + ' -h ipython '
     run_cmd = run_cmd + port_options_str + ' %(image)s '
     run_cmd = run_cmd % docker_vars
 
-    run('ID=$(%s) && echo $ID > /home/%s/docker/ids/ipython_container' %
-            (run_cmd, env.user))
+    run('ID=$(%s) && echo $ID > %s' %
+            (run_cmd, id_path))
 
 def ipython_start():
     """
