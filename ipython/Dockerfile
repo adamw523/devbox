@@ -57,6 +57,6 @@ RUN export http_proxy=%(proxy_url)s; \
     beautifulsoup4 tables nltk scikit-learn paramiko scikit-image \
     nose nosecolor nose-watch argcomplete boto jinja2
 
-RUN chown %(user)s:%(user)s /home/%(user)s/*
+RUN chown -R %(user)s:%(user)s /home/%(user)s/*
 
 CMD ["/usr/bin/supervisord"]
