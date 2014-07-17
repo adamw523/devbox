@@ -44,6 +44,7 @@ def dodo():
 	# set values from config
 	env.hosts = [config.get('dodo', 'host')]
 	env.user = config.get('dodo', 'user')
+	env.private_ip = config.get('dodo', 'private_ip')
 
 def minee_base():
     """
@@ -221,27 +222,69 @@ def docker_install_host_tools():
     fabtools.require.deb.packages(['tmux'])
     put('editor_vim/tmux.conf', '/home/%s/.tmux.conf' % (env.user))
 
+def docker_install_host_networking():
+    fabtools.require.deb.packages(['vlan'])
+
+    sudo('ifconfig eth0:0 %s up' % (env.private_ip))
+    # TODO: virtual NIC needs to survive a reboot
+
 #---------------------------
 # OpenVPN Client
 #---------------------------
-def configure_openvpn_client(zip_path=None):
+def openvpn_connect():
     """
-    Configure devbox as OpenVPN client
+    Connect to devbox over OpenVPN
     """
-    if not zip_path:
-        abort("Please provide a path to zip config ovpn file. eg: configure_openvpn_client:adam.zip")
 
+    # install requirements
     fabtools.require.deb.packages(['openvpn'])
-    run('mkdir -p /tmp/client.ovpn')
-    put(zip_path, '/tmp/client.ovpn/client.ovpn.zip')
-    with cd('/tmp/client.ovpn'):
-        run('unzip client.ovpn.zip')
-        dirname = run("dirname `find . -name 'cert.crt' | head -n1`")
-        sudo("cp %(dn)s/key.key %(dn)s/ca.crt %(dn)s/ta.key %(dn)s/cert.crt /etc/openvpn/" % {'dn': dirname})
-        sudo("cp %(dn)s/config.ovpn /etc/openvpn/client.conf" % {'dn': dirname})
+    if not exists('openvpn'):
+        run('mkdir openvpn')
 
-    sudo('service openvpn restart')
-    run('rm -fR /tmp/client.ovpn')
+    # open firewall
+    sudo('ufw allow 1194/udp')
+    sudo('ufw allow 1194/tcp')
+
+    # might need sudo('echo 1 > /proc/sys/net/ipv4/ip_forward')
+
+
+    # generate key
+    run('openvpn --genkey --secret openvpn/static.key')
+
+    # create remote configuration
+    server_conf = [
+    'dev tun',
+    'ifconfig 10.8.0.1 10.8.0.2',
+    'secret static.key',
+    'comp-lzo',
+    'user nobody',
+    'group nogroup',
+    'daemon'
+    ]
+
+    append('openvpn/server.conf', server_conf)
+
+    # kill if already running
+    with settings(warn_only=True):
+        running = run('pgrep -u nobody openvpn')
+        if running:
+            sudo('killall openvpn')
+
+    # start remote process
+    with cd('openvpn'):
+        sudo('openvpn server.conf')
+
+    # configure local process
+    get('openvpn/static.key', '/tmp/%s.key' % (env.host))
+    local('rm -f /tmp/%s.conf' % (env.host))
+    local('echo "remote %s" >> /tmp/%s.conf ' % (env.host, env.host))
+    local('echo "dev tun" >> /tmp/%s.conf ' % (env.host))
+    local('echo "ifconfig 10.8.0.2 10.8.0.1" >> /tmp/%s.conf ' % (env.host))
+    local('echo "secret /tmp/%s.key" >> /tmp/%s.conf ' % (env.host, env.host))
+    local('echo "comp-lzo" >> /tmp/%s.conf ' % (env.host))
+    local('echo "route %s 255.255.255.255" >> /tmp/%s.conf ' % (env.private_ip, env.host))
+
+    local('sudo /usr/local/sbin/openvpn /tmp/%s.conf' % (env.host))
 
 
 #---------------------------
@@ -254,7 +297,6 @@ def create_swapfile():
     sudo('chmod 600 /swapfile')
     sudo('mkswap /swapfile')
     sudo('swapon /swapfile')
-
 
 def install_devtools():
     """
