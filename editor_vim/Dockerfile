@@ -1,5 +1,4 @@
 FROM ubuntu:trusty
-ADD 01apt-cacher /etc/apt/apt.conf.d/01apt-cacher
 RUN apt-get update -q --fix-missing
 RUN apt-get install -qy curl iputils-ping openssh-server supervisor
 
