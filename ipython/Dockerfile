@@ -1,16 +1,13 @@
 FROM ubuntu:14.04
 
-RUN export http_proxy=%(proxy_url)s; \
-    apt-get update -q --fix-missing
+RUN apt-get update -q --fix-missing
 
 # requirements
-RUN export http_proxy=%(proxy_url)s; \
-    apt-get -qy install libatlas-base-dev gfortran libfreetype6-dev \
+RUN apt-get -qy install libatlas-base-dev gfortran libfreetype6-dev \
     libpng12-dev pandoc libgeos-dev libjpeg-dev libhdf5-dev libncurses5-dev
 
 # SSH
-RUN export http_proxy=%(proxy_url)s; \
-    apt-get -qy install openssh-server
+RUN apt-get -qy install openssh-server
 RUN mkdir -p /var/run/sshd
 ADD id_rsa.pub /root/.ssh/authorized_keys
 RUN chmod 700 /root/.ssh
@@ -27,33 +24,26 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN useradd -m %(user)s
 
 # IPython
-RUN export http_proxy=%(proxy_url)s; \
-    apt-get -qy install python-pip python-dev python-virtualenv
+RUN apt-get -qy install python-pip python-dev python-virtualenv
 
 RUN virtualenv /home/adam/notebookenv
 
-RUN export http_proxy=%(proxy_url)s; \
-    /home/%(user)s/notebookenv/bin/pip install ipython tornado readline \
+RUN /home/%(user)s/notebookenv/bin/pip install ipython tornado readline \
     pexpect pyzmq pygments pytest mock
 
-RUN export http_proxy=%(proxy_url)s; \
-    /home/%(user)s/notebookenv/bin/pip install \
+RUN /home/%(user)s/notebookenv/bin/pip install \
     numpy scipy
 
-RUN export http_proxy=%(proxy_url)s; \
-    apt-get -qy install pkg-config libsqlite3-dev
+RUN apt-get -qy install pkg-config libsqlite3-dev
 
-RUN export http_proxy=%(proxy_url)s; \
-    /home/%(user)s/notebookenv/bin/pip install PIL  \
+RUN /home/%(user)s/notebookenv/bin/pip install PIL  \
     --allow-external PIL --allow-unverified PIL
 
-RUN export http_proxy=%(proxy_url)s; \
-    /home/%(user)s/notebookenv/bin/pip install  \
+RUN /home/%(user)s/notebookenv/bin/pip install  \
     numexpr matplotlib feedparser \
     tdaemon pysqlite markdown requests cython pandas networkx oauth2
 
-RUN export http_proxy=%(proxy_url)s; \
-    /home/%(user)s/notebookenv/bin/pip install  \
+RUN /home/%(user)s/notebookenv/bin/pip install  \
     beautifulsoup4 tables nltk scikit-learn paramiko scikit-image \
     nose nosecolor nose-watch argcomplete boto jinja2
 
