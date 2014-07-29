@@ -254,7 +254,7 @@ def openvpn_connect():
     # create remote configuration
     server_conf = [
     'dev tun',
-    'ifconfig 10.8.0.1 10.8.0.2',
+    'ifconfig 10.8.30.1 10.8.30.2',
     'secret static.key',
     'comp-lzo',
     'user nobody',
@@ -279,7 +279,7 @@ def openvpn_connect():
     local('rm -f /tmp/%s.conf' % (env.host))
     local('echo "remote %s" >> /tmp/%s.conf ' % (env.host, env.host))
     local('echo "dev tun" >> /tmp/%s.conf ' % (env.host))
-    local('echo "ifconfig 10.8.0.2 10.8.0.1" >> /tmp/%s.conf ' % (env.host))
+    local('echo "ifconfig 10.8.30.2 10.8.30.1" >> /tmp/%s.conf ' % (env.host))
     local('echo "secret /tmp/%s.key" >> /tmp/%s.conf ' % (env.host, env.host))
     local('echo "comp-lzo" >> /tmp/%s.conf ' % (env.host))
     local('echo "route %s 255.255.255.255" >> /tmp/%s.conf ' % (env.private_ip, env.host))
