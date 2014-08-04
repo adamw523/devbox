@@ -226,7 +226,7 @@ def docker_install_host_networking():
     fabtools.require.deb.packages(['vlan'])
 
     sudo('ifconfig eth0:0 %s up' % (env.private_ip))
-    # TODO: virtual NIC needs to survive a reboot
+    append('/etc/default/docker', 'DOCKER_OPTS="--ip=%s"' % env.private_ip, use_sudo=True)
 
 #---------------------------
 # OpenVPN Client
