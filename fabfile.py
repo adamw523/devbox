@@ -227,6 +227,12 @@ def docker_install_host_networking():
 
     sudo('ifconfig eth0:0 %s up' % (env.private_ip))
     append('/etc/default/docker', 'DOCKER_OPTS="--ip=%s"' % env.private_ip, use_sudo=True)
+    iface_add = [
+            'auto eht0:1',
+            'iface eth0:1 inet static',
+            '    address %s' % env.private_ip,
+            '    netmask 255.255.255.0']
+    append('/etc/network/interfaces', iface_add)
 
 #---------------------------
 # OpenVPN Client
