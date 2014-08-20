@@ -1,6 +1,6 @@
 FROM ubuntu:14.04
 
-RUN apt-get update -q --fix-missing
+RUN apt-get update -q
 
 # requirements
 RUN apt-get -qy install libatlas-base-dev gfortran libfreetype6-dev \
