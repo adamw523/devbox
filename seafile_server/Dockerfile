@@ -19,7 +19,7 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 8082
 EXPOSE 10001
 EXPOSE 12001
-RUN apt-get install -qy python2.7 python-setuptools python-simplejson python-imaging sqlite3 rsync python-pip
+RUN apt-get update; apt-get install -qy python2.7 python-setuptools python-simplejson python-imaging sqlite3 rsync python-pip
 RUN pip install boto_rsync
 RUN mkdir -p /seafile/downloads
 RUN cd /seafile/downloads && wget http://adamw523.s3.amazonaws.com/seafile/seafile-server_%(seafile_version)s_%(seafile_arch)s.tar.gz

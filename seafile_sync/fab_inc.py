@@ -17,7 +17,7 @@ def _sf_sync_docker_vars():
         'work_dir': '/home/%s/docker/seafile_sync_work/' % env.user,
         'ids_dir': '/home/%s/docker/ids/' % env.user,
         'public_ssh_port': 8024,
-        'seafile_version': '3.0.3',
+        'seafile_version': '3.1.5',
         'seafile_arch': 'x86-64'
     }
 
