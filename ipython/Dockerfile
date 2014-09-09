@@ -47,6 +47,12 @@ RUN /home/%(user)s/notebookenv/bin/pip install  \
     beautifulsoup4 tables nltk scikit-learn paramiko scikit-image \
     nose nosecolor nose-watch argcomplete boto jinja2
 
+RUN apt-get install libgeos++-dev
+
+RUN /home/%(user)s/notebookenv/bin/pip install basemap \
+    --allow-external basemap --allow-unverified basemap
+
+
 RUN chown -R %(user)s:%(user)s /home/%(user)s/*
 
 CMD ["/usr/bin/supervisord"]
