@@ -36,6 +36,11 @@ RUN /home/%(user)s/notebookenv/bin/pip install \
 
 RUN apt-get -qy install pkg-config libsqlite3-dev
 
+RUN ln -s /usr/lib/x86_64-linux-gnu/libjpeg.so /usr/lib
+RUN ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib
+RUN ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib
+RUN ln -s /usr/include/freetype2 /usr/local/include/freetype
+
 RUN /home/%(user)s/notebookenv/bin/pip install PIL  \
     --allow-external PIL --allow-unverified PIL
 
