@@ -21,7 +21,7 @@ def _sf_server_docker_vars():
         'public_ccnet_port': 10001,
         'public_data_port': 12001,
         'public_https_port': 8443,
-        'seafile_version': '3.1.3',
+        'seafile_version': '3.1.6',
         'seafile_arch': 'x86-64'
     }
 
