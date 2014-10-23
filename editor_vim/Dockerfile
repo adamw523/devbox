@@ -29,6 +29,9 @@ RUN apt-get install -qy vim tmux git
 ADD vimrc.after /tmp/home/%(user)s/.vimrc.after
 ADD tmux.conf /tmp/home/%(user)s/.tmux.conf
 
+# other dev tols
+RUN apt-get install -qy ack-grep most
+
 # below is a weird hack that prevents 'permission denied' errors
 RUN chown -R %(user)s:%(user)s /tmp/home/%(user)s
 RUN bash -c "shopt -s dotglob; mv /tmp/home/%(user)s/* /home/%(user)s/"
